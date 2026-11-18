@@ -1,0 +1,191 @@
+/* Charte graphique L'BURN (docs/contexte-lburn-docs/10-charte-graphique.md) */
+:global(:root) {
+  --lb-color-primary: #dc3129;
+  --lb-color-secondary: #ffb4aa;
+  --lb-color-pink-soft: #fee3e2;
+  --lb-color-text: #23262f;
+  --lb-color-bg: #f9f9f9;
+  --lb-color-white: #ffffff;
+  --lb-font-heading: "Archivo Black", Arial, sans-serif;
+  --lb-font-body: "Libre Franklin", Helvetica, Arial, sans-serif;
+  --lb-radius-button: 50px;
+  --lb-radius-card: 15px;
+}
+
+.phoneShell {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--lb-color-white);
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  background: var(--lb-color-text);
+  color: var(--lb-color-white);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbarLogo {
+  font-family: var(--lb-font-heading);
+  font-size: 18px;
+}
+
+.topbarLogo span {
+  color: var(--lb-color-secondary);
+}
+
+.topbarTitle {
+  font-size: 14px;
+}
+
+.content {
+  padding: 20px 16px 40px;
+}
+
+.filterBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.filterLabel {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--lb-color-text);
+}
+
+.filterChips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 5px 12px;
+  border-radius: var(--lb-radius-button);
+  border: 1.5px solid var(--lb-color-text);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.activeChip {
+  background: var(--lb-color-text);
+  color: var(--lb-color-white);
+}
+
+.searchBar {
+  border: 1.5px solid var(--lb-color-text);
+  border-radius: var(--lb-radius-button);
+  padding: 10px 16px;
+  margin-bottom: 24px;
+}
+
+.searchBar input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 15px;
+  background: transparent;
+}
+
+.sectionHeader {
+  font-family: var(--lb-font-heading);
+  font-size: 13px;
+  color: var(--lb-color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 10px;
+}
+
+.compteur {
+  color: var(--lb-color-primary);
+  font-family: var(--lb-font-body);
+}
+
+.profileList {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 24px;
+}
+
+.profileRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: var(--lb-radius-card);
+  background: var(--lb-color-bg);
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--lb-font-heading);
+  font-size: 14px;
+  color: var(--lb-color-white);
+  flex-shrink: 0;
+}
+
+.avatar.burnette {
+  background: var(--lb-color-secondary);
+}
+
+.avatar.activ {
+  background: var(--lb-color-primary);
+}
+
+.avatar.pairaidante {
+  background: var(--lb-color-text);
+}
+
+.profileInfo {
+  flex: 1;
+}
+
+.profileName {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.profileMeta {
+  font-size: 12px;
+  color: var(--lb-color-text);
+  opacity: 0.7;
+}
+
+.badgeStatut {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--lb-radius-button);
+  text-transform: uppercase;
+}
+
+.badgeStatut.burnette {
+  background: var(--lb-color-pink-soft);
+  color: var(--lb-color-text);
+}
+
+.badgeStatut.activ {
+  background: var(--lb-color-primary);
+  color: var(--lb-color-white);
+}
+
+.badgeStatut.pairaidante {
+  background: var(--lb-color-text);
+  color: var(--lb-color-white);
+}
