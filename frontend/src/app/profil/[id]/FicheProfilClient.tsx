@@ -198,8 +198,10 @@ export default function FicheProfilClient({ id }: { id: string }) {
           </div>
         </div>
 
-        <SectionSuivi titre="Formations" items={detail?.formations ?? []} />
-        <SectionSuivi titre="Ateliers & activités" items={detail?.ateliers ?? []} />
+        <div className={styles.suiviGrid}>
+          <SectionSuivi titre="Formations" items={detail?.formations ?? []} />
+          <SectionSuivi titre="Ateliers & activités" items={detail?.ateliers ?? []} />
+        </div>
 
         <div className={styles.disposSection}>
           <p className={styles.disposTitle}>📅 Disponibilités de {profil.nom.split(" ")[0]}</p>

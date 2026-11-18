@@ -408,3 +408,20 @@
   padding: 8px 16px;
   cursor: pointer;
 }
+
+/* ── Desktop (≥1024px) : même principe que frontend/src/app/page.module.css ── */
+/* Sous 1024px, aucune règle ci-dessus n'est touchée : rendu mobile inchangé. */
+@media (min-width: 1024px) {
+  .phoneShell {
+    max-width: 960px;
+  }
+
+  /* auto-fit + minmax : Formations et Ateliers passent en 2 colonnes dès qu'il y a
+     la place (~1024px avec cette largeur de conteneur), sans palier supplémentaire. */
+  .suiviGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+    gap: 0 24px;
+    align-items: start;
+  }
+}

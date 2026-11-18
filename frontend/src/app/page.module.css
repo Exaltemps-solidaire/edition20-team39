@@ -279,9 +279,12 @@
     margin-bottom: 0;
   }
 
+  /* auto-fit + minmax : le nombre de colonnes s'ajuste à la largeur disponible
+     (3 à partir de ~1024px, 2 puis 1 en dessous), sans palier supplémentaire ni
+     blowout (une étiquette ou un nom long ne force plus une colonne à dépasser 1fr). */
   .sectionsGrid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
     gap: 28px;
     align-items: start;
   }
