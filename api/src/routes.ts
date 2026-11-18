@@ -8,6 +8,7 @@ import {
   estEtapeValide,
   listerProfils,
   obtenirHistorique,
+  supprimerProfil,
 } from "./db.ts";
 
 export type Reponse = { statut: number; corps?: unknown };
@@ -49,6 +50,12 @@ export async function router(methode: string, url: string, corps?: unknown): Pro
   const historiqueMatch = chemin.match(/^\/api\/v1\/profils\/([^/]+)\/historique$/);
   if (methode === "GET" && historiqueMatch) {
     return { statut: 200, corps: await obtenirHistorique(historiqueMatch[1]) };
+  }
+
+  const profilMatch = chemin.match(/^\/api\/v1\/profils\/([^/]+)$/);
+  if (methode === "DELETE" && profilMatch) {
+    const supprime = await supprimerProfil(profilMatch[1]);
+    return { statut: supprime ? 204 : 404 };
   }
 
   return { statut: 404 };

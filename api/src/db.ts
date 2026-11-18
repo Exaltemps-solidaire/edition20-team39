@@ -35,6 +35,11 @@ const profilsExemple: Profil[] = [
   { id: "4", nom: "Céline Rousseau", antenne: "Lille", estActiv: true, estPairAidante: false },
   { id: "5", nom: "Karima Mansouri", antenne: "Talence", estActiv: true, estPairAidante: true },
   { id: "6", nom: "Florence Genet", antenne: "Lille", estActiv: true, estPairAidante: true },
+  // Profils supplémentaires, jetables : pour avoir de la matière à tester (édition de
+  // statut, suppression) sans toucher aux 6 profils "canoniques" de la démo ci-dessus.
+  { id: "7", nom: "Chloé Dubreuil", antenne: "Agen", estActiv: false, estPairAidante: false },
+  { id: "8", nom: "Manon Petit", antenne: "Mimizan", estActiv: false, estPairAidante: false },
+  { id: "9", nom: "Inès Caron", antenne: "Agen", estActiv: false, estPairAidante: false },
 ];
 
 // Valide une valeur reçue en entrée (corps JSON) : une des 3 étapes, ou rien d'autre.
@@ -160,4 +165,11 @@ export async function creerProfil(nom: string, antenne: string): Promise<Profil>
     [id, nom, antenne],
   );
   return versProfil(rows[0]);
+}
+
+// Supprime un profil (l'historique associé part avec, via ON DELETE CASCADE).
+// Retourne false si l'id est inconnu.
+export async function supprimerProfil(id: string): Promise<boolean> {
+  const { rowCount } = await pool.query("DELETE FROM profils WHERE id = $1", [id]);
+  return (rowCount ?? 0) > 0;
 }

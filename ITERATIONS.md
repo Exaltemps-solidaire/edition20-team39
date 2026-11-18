@@ -314,6 +314,32 @@ Retour du développeur le 2026-11-18 : « passage au statut suivant pas assez cl
 
 ---
 
+## Itération 15 : suppression de profil + correctif critique de routage + profils de test
+
+Retours du développeur le 2026-11-18 : (1) la création de profil renvoyait une erreur illisible (« Object ») — en réalité l'API était arrêtée (`SIGTERM`, probablement une manipulation de l'autre session active sur ce dépôt), pas un bug de code ; (2) besoin de profils supplémentaires, supprimables depuis l'interface, pour avoir de la matière à tester.
+
+- **Bug critique trouvé et corrigé en creusant la demande** : la fiche profil (`/profil/[id]`, segment dynamique Next.js) n'était statiquement générée que pour les ids listés dans `generateStaticParams` (les 6 profils d'exemple). **Tout profil créé après coup (bouton « + Nouveau profil », id en UUID aléatoire) ou tout profil ajouté au seed sans rebuild aurait fait 404 sur sa fiche** — un export statique ne peut pas deviner les ids à l'exécution. Corrigé en remplaçant le segment dynamique par une route unique `/profil` qui lit l'id en paramètre de requête (`?id=...`, via `useSearchParams`, côté client) : fonctionne pour n'importe quel id, présent ou futur, sans rebuild.
+- **Dans le périmètre** :
+  - `DELETE /api/v1/profils/:id` (204 si supprimé, 404 sinon ; l'historique associé part avec, `ON DELETE CASCADE` déjà en place depuis l'Itération 12).
+  - Fiche profil : zone « Supprimer ce profil » en bas de page, avec dialog de confirmation dédié (même pattern que le changement de statut), redirection vers le dashboard après suppression.
+  - 3 profils supplémentaires, jetables, ajoutés en base pour disposer de données de test sans toucher aux 6 profils canoniques de la démo : Chloé Dubreuil (Agen), Manon Petit (Mimizan), Inès Caron (Agen) — toutes BURN'ette, variété d'antenne (Agen/Mimizan jusqu'ici absentes des données). Ajoutés au tableau de seed dans `api/src/db.ts` (pour une base fraîche) **et** insérés directement dans la base déjà peuplée (le seed ne rejoue que si la table est vide).
+  - `podman-compose.yml` : `restart: unless-stopped` sur les deux services, pour limiter l'impact d'un arrêt inattendu comme celui qui a déclenché le point (1) ci-dessus.
+- **Critères d'acceptation** :
+  - Étant donné un profil créé via le formulaire (id en UUID) ou un des 3 nouveaux profils de test, quand on clique dessus depuis le dashboard, alors sa fiche s'affiche (vérifié : `/profil?id=7` → 200, contenu correct).
+  - Étant donné la fiche d'un profil, quand on clique « Supprimer ce profil » puis confirme, alors il disparaît de la base et on revient au dashboard sans lui.
+  - Étant donné les tests existants, quand on les rejoue, alors ils passent (7 API + 14 frontend).
+- **Bilan** :
+  - Les 3 critères sont satisfaits, vérifiés par `curl` contre la vraie base en production (avance de statut + suppression testées sur les profils de test, puis état remis propre pour le développeur).
+  - API toujours restée arrêtée un temps avant ce diagnostic : relancée (`podman start`), cause probable = une opération de l'autre session active sur ce dépôt (non confirmée).
+  - **Modifications** :
+    - `api/src/db.ts` : `supprimerProfil`, 3 profils ajoutés au tableau de seed.
+    - `api/src/routes.ts` : route `DELETE /api/v1/profils/:id`.
+    - `frontend/src/app/profil/[id]/` → déplacé en `frontend/src/app/profil/` (suppression du segment dynamique) : `page.tsx` (nouveau, route unique + `Suspense`), `FicheProfilClient.tsx` (id lu via `useSearchParams`, zone de suppression + dialog), `page.module.css` (classes `.dangerZone`/`.boutonSupprimer`).
+    - `frontend/src/app/page.tsx` : lien dashboard → fiche passé de `/profil/${id}` à `/profil?id=${id}`.
+    - `podman-compose.yml` : `restart: unless-stopped`.
+
+---
+
 ## En arrière-plan (sans commit) : gestion des formations
 
 Lancé le 2026-11-18 à la demande du développeur : un pipeline d'agents planifie puis implémente la gestion des formations (lister/ajouter/modifier/supprimer une formation sur la fiche profil, persistée en base — le plus gros morceau encore manquant). Déroulé : planification → validation contre la documentation existante (PRD, règles métier, `adr.md`) → 2 tours de raffinement → implémentation dans un worktree isolé. **Volontairement non commité** : à relire et intégrer dans une itération dédiée une fois le résultat prêt.

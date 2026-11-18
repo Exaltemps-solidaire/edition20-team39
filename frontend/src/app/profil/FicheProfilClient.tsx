@@ -2,14 +2,15 @@
 
 import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./page.module.css";
-import { LIBELLES_SINGULIER, sectionAffichee, type Profil, type Section } from "../../../lib/profils";
+import { LIBELLES_SINGULIER, sectionAffichee, type Profil, type Section } from "../../lib/profils";
 import {
   construireProgression,
   trouverProfilDetail,
   type EtapeProgression,
   type ItemSuivi,
-} from "../../../lib/profilDetail";
+} from "../../lib/profilDetail";
 
 type EntreeHistorique = {
   ancienStatut: Section;
@@ -126,18 +127,23 @@ function Topbar() {
   );
 }
 
-export default function FicheProfilClient({ id }: { id: string }) {
+export default function FicheProfilClient() {
+  const router = useRouter();
+  const id = useSearchParams().get("id");
   const [profil, setProfil] = useState<Profil | null>(null);
   const [historique, setHistorique] = useState<EntreeHistorique[]>([]);
-  const [chargement, setChargement] = useState(true);
+  const [chargement, setChargement] = useState(id !== null);
   const [erreur, setErreur] = useState(false);
   const [version, setVersion] = useState(0);
   const [enCoursValidation, setEnCoursValidation] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
   const [cibleChangement, setCibleChangement] = useState<Section | null>(null);
+  const [suppressionEnCours, setSuppressionEnCours] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const suppressionDialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
+    if (!id) return;
     let ignore = false;
     async function charger() {
       try {
@@ -195,6 +201,17 @@ export default function FicheProfilClient({ id }: { id: string }) {
     }
   }
 
+  async function supprimerProfilCourant() {
+    setSuppressionEnCours(true);
+    try {
+      await fetch(`/api/v1/profils/${id}`, { method: "DELETE" });
+      router.push("/");
+    } finally {
+      setSuppressionEnCours(false);
+      suppressionDialogRef.current?.close();
+    }
+  }
+
   if (chargement) {
     return (
       <div className={styles.phoneShell}>
@@ -219,7 +236,7 @@ export default function FicheProfilClient({ id }: { id: string }) {
 
   const etapeActuelle = sectionAffichee(profil);
   const progression = construireProgression(etapeActuelle);
-  const detail = trouverProfilDetail(id);
+  const detail = trouverProfilDetail(profil.id);
   const depuis = detail?.depuis ?? `Membre de l'antenne ${profil.antenne}`;
 
   const indexActuelle = progression.findIndex((etape) => etape.cle === etapeActuelle);
@@ -292,6 +309,16 @@ export default function FicheProfilClient({ id }: { id: string }) {
             </ul>
           )}
         </div>
+
+        <div className={styles.dangerZone}>
+          <button
+            type="button"
+            className={styles.boutonSupprimer}
+            onClick={() => suppressionDialogRef.current?.showModal()}
+          >
+            Supprimer ce profil
+          </button>
+        </div>
       </div>
 
       {confirmation && <div className={styles.toast}>✓ Statut mis à jour — habilitation tracée !</div>}
@@ -322,6 +349,31 @@ export default function FicheProfilClient({ id }: { id: string }) {
             </div>
           </>
         )}
+      </dialog>
+
+      <dialog ref={suppressionDialogRef} className={styles.dialogConfirmation}>
+        <p className={styles.dialogTexte}>
+          <strong className={styles.dialogAlerte}>⚠️ Suppression définitive — </strong>
+          Supprimer <strong>{profil.nom}</strong> ? Cette action est irréversible : le profil et son
+          historique de statut disparaissent du dashboard.
+        </p>
+        <div className={styles.dialogActions}>
+          <button
+            type="button"
+            className={styles.dialogAnnuler}
+            onClick={() => suppressionDialogRef.current?.close()}
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            className={styles.dialogConfirmer}
+            onClick={supprimerProfilCourant}
+            disabled={suppressionEnCours}
+          >
+            {suppressionEnCours ? "Suppression…" : "Supprimer"}
+          </button>
+        </div>
       </dialog>
     </div>
   );

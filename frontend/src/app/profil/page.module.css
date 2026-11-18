@@ -379,6 +379,26 @@
   white-space: nowrap;
 }
 
+/* ── Zone de danger ── */
+.dangerZone {
+  padding: 16px 20px 32px;
+  border-top: 1px solid var(--lb-color-border);
+  margin-top: 8px;
+}
+
+.boutonSupprimer {
+  width: 100%;
+  font-family: var(--lb-font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lb-color-primary);
+  background: var(--lb-color-white);
+  border: 1.5px solid var(--lb-color-primary);
+  border-radius: var(--lb-radius-button);
+  padding: 10px;
+  cursor: pointer;
+}
+
 .toast {
   position: fixed;
   bottom: 24px;

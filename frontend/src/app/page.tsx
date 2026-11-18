@@ -34,7 +34,7 @@ function SectionProfils({ section, profils }: { section: Section; profils: Profi
       <div className={styles.profileList}>
         {profils.map((profil) => (
           <div className={styles.profileRow} key={profil.id}>
-            <Link href={`/profil/${profil.id}`} className={styles.profileLien}>
+            <Link href={`/profil?id=${profil.id}`} className={styles.profileLien}>
               <div className={`${styles.avatar} ${styles[section]}`}>{initiales(profil.nom)}</div>
               <div className={styles.profileInfo}>
                 <div className={styles.profileName}>{profil.nom}</div>
