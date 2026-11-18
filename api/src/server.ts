@@ -1,20 +1,34 @@
 // Service api du gabarit : écoute sur PORT (8081 par défaut), journaux sur la sortie standard.
 // Lancé directement par Node (suppression des types TypeScript), sans étape de compilation.
 import { createServer } from "node:http";
+import { initDb } from "./db.ts";
 import { router } from "./routes.ts";
 
 const port = Number(process.env.PORT ?? 8081);
 
 const serveur = createServer((req, res) => {
-  const { statut, corps } = router(req.method ?? "GET", req.url ?? "/");
-  if (corps === undefined) {
-    res.writeHead(statut).end();
-  } else {
-    res.writeHead(statut, { "Content-Type": "application/json" }).end(JSON.stringify(corps));
-  }
+  router(req.method ?? "GET", req.url ?? "/")
+    .then(({ statut, corps }) => {
+      if (corps === undefined) {
+        res.writeHead(statut).end();
+      } else {
+        res.writeHead(statut, { "Content-Type": "application/json" }).end(JSON.stringify(corps));
+      }
+    })
+    .catch((erreur) => {
+      console.error("api : erreur non gérée dans le routeur :", erreur);
+      res.writeHead(500, { "Content-Type": "application/json" }).end(JSON.stringify({ error: "erreur serveur" }));
+    });
 });
 
 serveur.listen(port, () => console.log(`api : à l'écoute sur le port ${port}`));
+
+// Si Postgres n'est pas joignable au démarrage, on log l'erreur sans faire planter le
+// processus (ni boucler) : les routes de santé répondent quand même, les routes /profils
+// échoueront tant que la base n'est pas là.
+initDb().catch((erreur) => {
+  console.error("api : échec de l'initialisation de la base (profils indisponibles) :", erreur);
+});
 
 // Arrêt propre : le conteneur reçoit SIGTERM, on termine les requêtes en cours avant de sortir.
 for (const signal of ["SIGTERM", "SIGINT"] as const) {

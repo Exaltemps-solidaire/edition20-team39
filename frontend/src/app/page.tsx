@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./page.module.css";
+import SelecteurRole from "../components/SelecteurRole";
 import {
   LIBELLES_PLURIEL,
   LIBELLES_SINGULIER,
   filtrerProfils,
-  profilsExemple,
   regrouperParSection,
   type Profil,
   type Section,
@@ -23,7 +23,15 @@ function initiales(nom: string): string {
     .toUpperCase();
 }
 
-function SectionProfils({ section, profils }: { section: Section; profils: Profil[] }) {
+function SectionProfils({
+  section,
+  profils,
+  onFaireProgresser,
+}: {
+  section: Section;
+  profils: Profil[];
+  onFaireProgresser: (id: string) => void;
+}) {
   return (
     <section>
       <p className={styles.sectionHeader}>
@@ -40,6 +48,15 @@ function SectionProfils({ section, profils }: { section: Section; profils: Profi
             <span className={`${styles.badgeStatut} ${styles[section]}`}>
               {LIBELLES_SINGULIER[section]}
             </span>
+            {section !== "pairaidante" && (
+              <button
+                type="button"
+                className={styles.boutonProgresser}
+                onClick={() => onFaireProgresser(profil.id)}
+              >
+                Statut suivant
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -48,10 +65,42 @@ function SectionProfils({ section, profils }: { section: Section; profils: Profi
 }
 
 export default function Dashboard() {
+  const [profils, setProfils] = useState<Profil[]>([]);
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState(false);
   const [recherche, setRecherche] = useState("");
   const [sectionActive, setSectionActive] = useState<FiltreSection>("toutes");
 
-  const groupes = regrouperParSection(filtrerProfils(profilsExemple, recherche));
+  const [version, setVersion] = useState(0);
+
+  useEffect(() => {
+    let ignore = false;
+    async function charger() {
+      try {
+        const reponse = await fetch("/api/v1/profils");
+        if (!reponse.ok) throw new Error("Réponse API non ok");
+        const donnees = await reponse.json();
+        if (ignore) return;
+        setProfils(donnees);
+        setErreur(false);
+      } catch {
+        if (!ignore) setErreur(true);
+      } finally {
+        if (!ignore) setChargement(false);
+      }
+    }
+    charger();
+    return () => {
+      ignore = true;
+    };
+  }, [version]);
+
+  async function faireProgresser(id: string) {
+    await fetch(`/api/v1/profils/${id}/statut`, { method: "PATCH" });
+    setVersion((valeurPrecedente) => valeurPrecedente + 1);
+  }
+
+  const groupes = regrouperParSection(filtrerProfils(profils, recherche));
   const sectionsAffichees = sectionActive === "toutes" ? SECTIONS : [sectionActive];
 
   return (
@@ -61,6 +110,7 @@ export default function Dashboard() {
           L&apos;<span>BURN</span>
         </span>
         <span className={styles.topbarTitle}>Back-office · Suivi des parcours</span>
+        <SelecteurRole />
       </div>
 
       <div className={styles.content}>
@@ -96,9 +146,22 @@ export default function Dashboard() {
           />
         </div>
 
-        {sectionsAffichees.map((section) => (
-          <SectionProfils key={section} section={section} profils={groupes[section]} />
-        ))}
+        {chargement && <p className={styles.etatChargement}>Chargement des profils…</p>}
+        {!chargement && erreur && (
+          <p className={styles.etatChargement}>
+            Impossible de charger les profils depuis l&apos;API. Réessaie dans un instant.
+          </p>
+        )}
+        {!chargement &&
+          !erreur &&
+          sectionsAffichees.map((section) => (
+            <SectionProfils
+              key={section}
+              section={section}
+              profils={groupes[section]}
+              onFaireProgresser={faireProgresser}
+            />
+          ))}
       </div>
     </div>
   );

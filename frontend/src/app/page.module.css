@@ -28,8 +28,9 @@
   color: var(--lb-color-white);
   padding: 16px 20px 14px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  gap: 10px 12px;
   flex-shrink: 0;
 }
 
@@ -37,6 +38,7 @@
   font-family: var(--lb-font-heading);
   font-size: 18px;
   letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 
 .topbarLogo span {
@@ -227,4 +229,24 @@
 .badgeStatut.pairaidante {
   background: var(--lb-color-text);
   color: var(--lb-color-white);
+}
+
+.boutonProgresser {
+  font-family: var(--lb-font-body);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--lb-color-text);
+  background: var(--lb-color-white);
+  border: 1.5px solid var(--lb-color-border);
+  border-radius: var(--lb-radius-button);
+  padding: 3px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.etatChargement {
+  font-size: 13px;
+  color: var(--lb-color-muted);
+  padding: 20px 0;
+  text-align: center;
 }

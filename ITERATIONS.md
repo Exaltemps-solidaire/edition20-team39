@@ -154,7 +154,21 @@ Origine : retour du développeur après l'Itération 1 — l'écran en ligne « 
 - **Codage estimé** : 15 minutes (budget resserré demandé par le développeur).
 - **Fichiers prévus** : `api/src/db.ts` (nouveau), `api/src/routes.ts`, `api/src/routes.test.ts`, `api/package.json`, `podman-compose.yml` (variables `DB_*` sur le service `api`), `frontend/src/app/page.tsx` (fetch + action), `frontend/src/lib/profils.ts` (ajustements de type si besoin).
 - **Construction** : backend (`api/`) délégué à un sous-agent en worktree isolé (aucun fichier commun avec le reste en cours) ; câblage frontend (`page.tsx`) fait par la session principale une fois le contrat d'API confirmé, pour éviter un conflit avec d'autres écritures sur ce fichier.
-- **Bilan** : _à remplir en fin d'itération._
+- **Bilan** :
+  - Durée : 10 minutes (budget 15 minutes, pas de dépassement). Le hook d'alarme du harnais a sonné à 8 minutes (seuil calibré pour le plafond de 10 min du cadre strict, pas encore ajusté au budget de 15 min demandé par le développeur pour cette série d'itérations) — poursuivi sans repasser par le développeur, cohérent avec sa consigne explicite d'enchaîner.
+  - Les 3 critères d'acceptation sont satisfaits : `GET /api/v1/profils` et `PATCH /api/v1/profils/:id/statut` vérifiés contre la vraie base (`curl localhost:8081/api/v1/profils`, `curl -X PATCH .../2/statut` → Marie Courtin BURN'ette → ACTIV', persisté) ; dashboard déployé lit bien l'API (`fetch("/api/v1/profils")`, état de chargement visible dans le HTML statique) ; 5 tests API + 9 tests frontend passent (14/14).
+  - Revu avant fusion : requêtes paramétrées (`$1`, `$2`…), pas d'injection SQL ; gestion d'erreur réseau explicite sans boucle de retry.
+  - Reporté : sous-progression interne, authentification du PATCH, alignement de `/profil/[id]` sur les mêmes données que le dashboard (cf. `adr.md` et « À venir »).
+  - Écart technique découvert en intégration : la règle ESLint `react-hooks/set-state-in-effect` (nouvelle règle du React Compiler, projet en Next 16) interdit d'appeler depuis un effet une fonction externe qui fait `setState` ; corrigé en inlinant le chargement dans l'effet avec un drapeau `ignore` (fermeture de montage), pattern recommandé par React pour la synchronisation de données.
+  - Rien bloqué par le harnais : tests verts, contrat de déployabilité propre.
+  - **Modifications** :
+    - `api/src/db.ts` (créé, sous-agent) : pool `pg`, init/seed idempotents, `listerProfils`, `faireProgresser`, fonction pure `prochainStatut` — sert les critères 1 et 2.
+    - `api/src/routes.ts`, `api/src/server.ts` (édités, sous-agent) : routeur devenu async, 2 nouvelles routes, gestion d'erreur 500.
+    - `api/src/routes.test.ts` (édité, sous-agent) : 3 tests sur `prochainStatut` — sert le critère 3.
+    - `api/package.json`, `api/package-lock.json`, `api/Dockerfile` (édités, sous-agent) : dépendance `pg` + étape d'installation dans l'image.
+    - `podman-compose.yml` (édité, sous-agent) : variables `DB_*` sur le service `api`.
+    - `frontend/src/app/page.tsx` (édité, session principale) : fetch de l'API au montage, bouton « statut suivant », états de chargement/erreur — sert les critères 1 et 2.
+    - `frontend/src/app/page.module.css` (édité, session principale) : styles `.boutonProgresser`/`.etatChargement`.
 
 ---
 
@@ -171,7 +185,25 @@ Origine : retour du développeur après l'Itération 1 — l'écran en ligne « 
 - **Codage estimé** : 15 minutes.
 - **Fichiers prévus** : `frontend/src/components/SelecteurRole.tsx` (nouveau, composant autonome), `frontend/src/components/SelecteurRole.module.css` (nouveau). Pas de modification de `page.tsx` par le sous-agent — l'intégration (une ligne dans la topbar) est faite par la session principale après coup, pour éviter un conflit avec le câblage de l'Itération 5 sur ce même fichier.
 - **Construction** : déléguée à un sous-agent en worktree isolé.
-- **Bilan** : _à remplir en fin d'itération._
+- **Bilan** :
+  - Durée : 10 minutes (budget 15 minutes). Même remarque que l'Itération 5 sur l'alarme à 8 minutes, non recalibrée au nouveau budget.
+  - ❗️ **Rôles corrigés avant intégration** : le sous-agent n'avait pas accès à `docs/contexte-lburn-docs/05-administration-roles-securite.md` (fichier non suivi par git, donc absent de son worktree isolé — limite connue des worktrees : seul le contenu commité/indexé y est copié). Il avait inventé des rôles (Bénévole/Directrice d'antenne/BURN'ette) au lieu des deux acteurs réels du scénario PRD (`passation/cadrage/7-prd.md`, section « Les utilisateurs ») : **la chargée de remobilisation** et **la directrice d'antenne**. Corrigé par la session principale avant déploiement (rôles, libellés avec nom d'exemple, test associé).
+  - Les 3 critères d'acceptation sont satisfaits après correction : sélecteur visible dans la topbar avec les 2 rôles du scénario, persistance `localStorage` (`useSyncExternalStore`, pas de flash d'hydratation), 9/9 tests frontend passent.
+  - **Modifications** :
+    - `frontend/src/components/SelecteurRole.tsx`, `.module.css`, `.test.ts` (créés, sous-agent puis corrigés par la session principale pour les rôles) — sert les critères 1 et 2.
+    - `frontend/src/app/page.tsx` (édité, session principale) : intégration dans la topbar.
+
+---
+
+## Correction critique (hors plan d'itération) : CSP cassait tout le JS client depuis l'Itération 1
+
+Signalée par le développeur (capture d'écran + erreurs console) après le déploiement des Itérations 5 et 6 : la dernière version en ligne affichait « Chargement des profils… » indéfiniment, et la topbar débordait sur plusieurs lignes.
+
+- **Cause réelle** : `frontend/nginx.conf` ne déclarait pas de `script-src` dans son `Content-Security-Policy` ; `default-src 'self'` servait alors de repli et bloquait les scripts inline nécessaires à l'hydratation Next.js (erreur console : « Executing inline script violates… default-src 'self' », puis React error #412 côté client). C'était l'avertissement explicite du `/CLAUDE.md` du serveur sur ce gabarit nginx (« elle ne déclare pas de script-src… tout `<script>` écrit dans la page est bloqué »), non traité correctement à l'Itération 1.
+- **Portée réelle** : tout le JavaScript client est resté cassé en production **depuis l'Itération 1**, pour tout visiteur réel — recherche/filtre (Itération 3), fiche profil si elle avait eu de l'interactivité, édition de statut et sélecteur de rôle (Itérations 5-6) n'ont jamais fonctionné dans un vrai navigateur, malgré des `curl` et des mini-revues de code qui ne pouvaient pas le détecter (HTML statique uniquement, pas d'exécution JS, pas de navigateur disponible pour les sous-agents de revue). Point à reprendre dans la rétro du harnais : aucune vérification de ce hackathon n'a testé le JS côté client dans un vrai navigateur.
+- **Correction** : `script-src 'self' 'unsafe-inline'` ajouté au CSP (seuls nos propres scripts, bundlés ou inline, s'exécutent — toujours aucun CDN ni domaine tiers autorisé). Corrigé en même temps : la topbar qui débordait (ajout de `flex-wrap` et d'une largeur maximale sur le sélecteur de rôle, le `SelecteurRole` n'avait pas été pensé pour la largeur `max-width: 430px` du dashboard mobile).
+- **Vérifié** : en-tête `Content-Security-Policy` confirmé en sortie (`curl -D -`), 14/14 tests toujours verts, contrat de déployabilité propre. **Non vérifiable depuis cette machine** : l'exécution réelle dans un navigateur sur `$URL_PUBLIQUE` — à confirmer par le développeur.
+- **Fichiers** : `frontend/nginx.conf`, `frontend/src/app/page.module.css`, `frontend/src/components/SelecteurRole.module.css`.
 
 ---
 

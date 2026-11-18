@@ -11,3 +11,8 @@ services:
     image: localhost:5000/team39/api:dev
     networks: [core-network]
     ports: ["8081:8081"]
+    environment:
+      DB_HOST: postgres.internal
+      DB_NAME: team39
+      DB_USER: postgres
+      DB_PASSWORD: postgres-dev-password
