@@ -41,6 +41,11 @@ Ici : un seul orchestrateur qui code (la session principale, cadrée par `CLAUDE
 - **Planificateur dédié** : un sous-agent séparé dupliquerait le contexte de planification sans parallélisme utile.
 - **Développeur backend / frontend séparés** : utile seulement si l'architecture est déjà scindée en services distincts (sinon, coordination sans découpage réel) — à trancher via `adr.md` si la stack du projet diffère.
 
+## Documentation métier (association L'BURN)
+
+- [docs/contexte-lburn-docs/README.md](./docs/contexte-lburn-docs/README.md) — index de la documentation de référence sur l'association L'BURN et le sujet du hackathon (Thème 2, Parcours ACTIV').
+- À lire avant de coder une règle métier, un rôle ou une donnée : chaque affirmation y est tracée `[CODE pN]`, et ce qui n'y est pas écrit n'est pas connu (pas d'invention, question à l'équipe sinon).
+
 ## Sources
 
 - [Building effective agents — Anthropic](https://www.anthropic.com/research/building-effective-agents)

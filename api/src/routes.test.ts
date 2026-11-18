@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { booleensVersEtape, estEtapeValide, etapeVersBooleens } from "./db.ts";
+import { booleensVersEtape, estDateValide, estEtapeValide, estEtatFormationValide, etapeVersBooleens } from "./db.ts";
 import { router } from "./routes.ts";
 
 describe("router", () => {
@@ -24,6 +24,28 @@ describe("router", () => {
     expect((await router("POST", "/api/v1/profils", { nom: "Test" })).statut).toBe(400);
     expect((await router("POST", "/api/v1/profils", { nom: "  ", antenne: "Lille" })).statut).toBe(400);
   });
+
+  it("répond 400 sur POST formations si etat invalide ou nom vide", async () => {
+    expect(
+      (await router("POST", "/api/v1/profils/1/formations", { nom: "Test", etat: "autre" })).statut,
+    ).toBe(400);
+    expect(
+      (await router("POST", "/api/v1/profils/1/formations", { nom: "  ", etat: "a-faire" })).statut,
+    ).toBe(400);
+  });
+
+  it("répond 404 sur PATCH/DELETE d'une formation inconnue", async () => {
+    expect(
+      (
+        await router("PATCH", "/api/v1/profils/1/formations/inconnue", {
+          nom: "Test",
+          etat: "a-faire",
+          date: null,
+        })
+      ).statut,
+    ).toBe(404);
+    expect((await router("DELETE", "/api/v1/profils/1/formations/inconnue")).statut).toBe(404);
+  });
 });
 
 describe("estEtapeValide", () => {
@@ -37,6 +59,32 @@ describe("estEtapeValide", () => {
     expect(estEtapeValide("autre")).toBe(false);
     expect(estEtapeValide(undefined)).toBe(false);
     expect(estEtapeValide(42)).toBe(false);
+  });
+});
+
+describe("estEtatFormationValide", () => {
+  it("accepte les 3 états connus", () => {
+    expect(estEtatFormationValide("termine")).toBe(true);
+    expect(estEtatFormationValide("en-cours")).toBe(true);
+    expect(estEtatFormationValide("a-faire")).toBe(true);
+  });
+
+  it("refuse toute autre valeur", () => {
+    expect(estEtatFormationValide("autre")).toBe(false);
+    expect(estEtatFormationValide(undefined)).toBe(false);
+  });
+});
+
+describe("estDateValide", () => {
+  it("accepte une date YYYY-MM-DD, null ou undefined", () => {
+    expect(estDateValide("2026-11-18")).toBe(true);
+    expect(estDateValide(null)).toBe(true);
+    expect(estDateValide(undefined)).toBe(true);
+  });
+
+  it("refuse un format de date invalide", () => {
+    expect(estDateValide("18/11/2026")).toBe(false);
+    expect(estDateValide(42)).toBe(false);
   });
 });
 
