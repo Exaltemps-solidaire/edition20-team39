@@ -156,6 +156,12 @@
   border: 1.5px solid var(--lb-color-border);
   background: var(--lb-color-white);
   text-align: center;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.statutStep:disabled {
+  cursor: default;
 }
 
 .stepIcon {
@@ -193,6 +199,13 @@
   color: var(--lb-color-muted);
   font-size: 14px;
   flex-shrink: 0;
+}
+
+.statutAide {
+  font-size: 11px;
+  color: var(--lb-color-muted);
+  margin-top: 8px;
+  padding: 0 2px;
 }
 
 /* ── Formations / Ateliers ── */
@@ -316,31 +329,54 @@
   color: #1a9e53;
 }
 
-/* ── CTA VALIDER : fond rouge plein, texte blanc (conforme AA) ── */
-.ctaBar {
-  padding: 16px 20px 20px;
-  background: var(--lb-color-white);
-  border-top: 1px solid var(--lb-color-border);
+/* ── Historique du statut ── */
+.historiqueSection {
+  padding: 16px 20px;
   flex-shrink: 0;
 }
 
-.btnValider {
-  display: block;
-  width: 100%;
-  background: var(--lb-color-primary);
-  color: var(--lb-color-white);
+.historiqueTitre {
   font-family: var(--lb-font-heading);
-  font-size: 15px;
-  padding: 16px;
-  border: none;
-  border-radius: var(--lb-radius-button);
-  cursor: pointer;
-  text-align: center;
+  font-size: 13px;
+  color: var(--lb-color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
 }
 
-.btnValider:disabled {
-  opacity: 0.6;
-  cursor: default;
+.historiqueVide {
+  font-size: 13px;
+  color: var(--lb-color-muted);
+}
+
+.historiqueListe {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.historiqueLigne {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--lb-radius-card);
+  background: var(--lb-color-cream);
+  border: 1px solid var(--lb-color-border);
+  font-size: 13px;
+}
+
+.historiqueTransition {
+  font-weight: 700;
+  color: var(--lb-color-text);
+}
+
+.historiqueDate {
+  font-size: 11px;
+  color: var(--lb-color-muted);
+  white-space: nowrap;
 }
 
 .toast {
@@ -377,6 +413,10 @@
   font-size: 14px;
   line-height: 1.5;
   margin-bottom: 18px;
+}
+
+.dialogAlerte {
+  color: var(--lb-color-primary);
 }
 
 .dialogActions {

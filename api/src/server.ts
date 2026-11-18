@@ -6,8 +6,25 @@ import { router } from "./routes.ts";
 
 const port = Number(process.env.PORT ?? 8081);
 
+function lireCorpsJson(req: import("node:http").IncomingMessage): Promise<unknown> {
+  return new Promise((resolve) => {
+    const morceaux: Buffer[] = [];
+    req.on("data", (morceau) => morceaux.push(morceau));
+    req.on("end", () => {
+      if (morceaux.length === 0) return resolve(undefined);
+      try {
+        resolve(JSON.parse(Buffer.concat(morceaux).toString("utf8")));
+      } catch {
+        resolve(undefined);
+      }
+    });
+    req.on("error", () => resolve(undefined));
+  });
+}
+
 const serveur = createServer((req, res) => {
-  router(req.method ?? "GET", req.url ?? "/")
+  lireCorpsJson(req)
+    .then((corps) => router(req.method ?? "GET", req.url ?? "/", corps))
     .then(({ statut, corps }) => {
       if (corps === undefined) {
         res.writeHead(statut).end();

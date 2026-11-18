@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
 import SelecteurRole from "../components/SelecteurRole";
+import NouveauProfilDialog, { type NouveauProfilDialogHandle } from "../components/NouveauProfilDialog";
 import {
   LIBELLES_PLURIEL,
   LIBELLES_SINGULIER,
@@ -56,6 +57,7 @@ export default function Dashboard() {
   const [erreur, setErreur] = useState(false);
   const [recherche, setRecherche] = useState("");
   const [sectionActive, setSectionActive] = useState<FiltreSection>("toutes");
+  const nouveauProfilRef = useRef<NouveauProfilDialogHandle>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -93,6 +95,20 @@ export default function Dashboard() {
       </div>
 
       <div className={styles.content}>
+        <button
+          type="button"
+          className={styles.nouveauProfilBanner}
+          onClick={() => nouveauProfilRef.current?.ouvrir()}
+        >
+          <span className={styles.nouveauProfilIcon} aria-hidden="true">
+            +
+          </span>
+          <span className={styles.nouveauProfilText}>
+            <span className={styles.nouveauProfilTitle}>Nouveau profil</span>
+            <span className={styles.nouveauProfilSub}>Ajouter une BURN&apos;ette manuellement</span>
+          </span>
+        </button>
+
         <div className={styles.toolbar}>
           <div className={styles.filterBar}>
             <span className={styles.filterLabel}>Filtre</span>
@@ -141,6 +157,11 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      <NouveauProfilDialog
+        ref={nouveauProfilRef}
+        onCree={(profil) => setProfils((precedents) => [...precedents, profil])}
+      />
     </div>
   );
 }

@@ -272,39 +272,61 @@ Retour du développeur le 2026-11-18 : « passage au statut suivant pas assez cl
 
 ---
 
-## Propositions pour la suite (gestion du back-office, demande du développeur du 2026-11-18)
+## Itération 12 : statut réversible + historique daté
 
-Constat du développeur : le back-office est affiché mais très peu « gérable » — en dehors de faire avancer un statut d'un cran, rien n'est éditable, pas de retour en arrière, pas d'historique, pas de création de profil hors seed fixe. Détail de ce qui est demandé et son découpage proposé, à valider avant codage (taille et dépendances à confirmer une fois le temps restant connu) :
+**Plan validé par le développeur le 2026-11-18** (« lance 12 à 14 et on verra ensuite »). Fusionne les anciennes itérations candidates 12 (réversibilité) et 13 (historique), car elles partagent le même point d'écriture dans l'API.
 
-### Itération 12 (candidate) : statut réversible, choix direct de l'étape
+- **Dans le périmètre** :
+  - `PATCH /api/v1/profils/:id/statut` prend désormais `{ "etape": "burnette"|"activ"|"pairaidante" }` (400 si absent/invalide) au lieu d'avancer automatiquement d'un cran — choix direct de n'importe quelle étape, dans les deux sens.
+  - Nouvelle table `historique_statut` (profil_id, ancien_statut, nouveau_statut, date), remplie à chaque changement réel (pas de ligne si l'étape cible égale l'étape actuelle).
+  - Nouvel endpoint `GET /api/v1/profils/:id/historique`.
+  - Fiche profil : les 3 étapes de la progression sont cliquables (étape actuelle désactivée), le dialog de confirmation nomme le sens du changement et affiche un avertissement visuel distinct pour un recul (⚠️, texte rouge). Section « Historique du statut » sous la progression, liste datée (format FR, jour/mois/année + heure).
+- **Hors périmètre** : qui peut voir l'historique (❓ non tranché par le PRD, le sélecteur de rôle reste déclaratif) ; suppression d'une ligne d'historique (le journal n'est pas éditable, par design).
+- **Critères d'acceptation** :
+  - Étant donné une pair-aidante, quand on clique l'étape BURN'ette dans sa fiche et qu'on confirme, alors son statut recule réellement (vérifié par l'API).
+  - Étant donné un changement de statut confirmé, quand on regarde la section Historique, alors une ligne datée apparaît avec l'ancien et le nouveau statut.
+  - Étant donné les tests existants, quand on les rejoue, alors ils passent (7 côté API + 14 côté frontend).
+- **Bilan** :
+  - Les 3 critères sont satisfaits : vérifié par `curl` contre la vraie base en production (Karima Mansouri reculée de Pair-aidante à ACTIV' puis remise, historique confirmé daté) ; 7+14 tests verts ; build propre.
+  - Revu avant déploiement : toutes les requêtes restent paramétrées (`$1`, `$2`…), pas d'injection SQL ; validation de l'étape côté API avant toute écriture (400 sinon), pas seulement côté client.
+  - **Modifications** :
+    - `api/src/db.ts` : `definirStatut` (remplace `faireProgresser`), `obtenirHistorique`, `etapeVersBooleens`/`booleensVersEtape`/`estEtapeValide` (fonctions pures), table `historique_statut`.
+    - `api/src/routes.ts`, `api/src/server.ts` : nouvelles routes PATCH (corps JSON)/GET historique, lecture du corps de requête (absente jusqu'ici).
+    - `api/src/routes.test.ts` : tests sur la validation d'entrée et les fonctions pures (7 tests, remplace les tests sur `prochainStatut`).
+    - `frontend/src/app/profil/[id]/FicheProfilClient.tsx`, `page.module.css` : étapes cliquables, dialog adaptatif, section historique — remplace le CTA unique de l'Itération 11.
 
-- Remplace l'auto-avancement unique (`PATCH .../statut`, toujours « +1 ») par un choix explicite de l'étape cible, dans les deux sens.
-- API : `PATCH /api/v1/profils/:id/statut` prend un corps `{ "etape": "burnette"|"activ"|"pairaidante" }` au lieu de n'avancer que d'un cran.
-- Fiche : les 3 étapes de la progression deviennent cliquables (pas seulement un CTA en bas) ; le dialog de confirmation (Itération 11) s'adapte au sens du changement (« faire reculer » vs « faire avancer »), avec un message plus appuyé si c'est un recul (❓ à valider avec les cadreurs : un recul de statut doit-il avoir un texte d'avertissement différent, par exemple sur la perte d'habilitation ?).
-- Pas de nouvelle table : réutilise `profils` existante.
+---
 
-### Itération 13 (candidate) : historique daté des changements de statut
+## Itération 14 : création manuelle d'un nouveau profil
 
-- Dépend de l'Itération 12 (le point d'écriture de l'historique est le même endroit que le nouveau `PATCH`).
-- Nouvelle table `historique_statut` (profil_id, ancien_statut, nouveau_statut, date), remplie à chaque changement (y compris les reculs).
-- Nouvel endpoint `GET /api/v1/profils/:id/historique`.
-- Fiche : section « Historique » sous la progression du statut, liste chronologique datée (ex. « ACTIV' → Pair-aidante le 18/11/2026 à 18h22 »).
-- ❓ Qui peut voir l'historique (les deux rôles du sélecteur, ou seulement la chargée de remobilisation) — pas tranché par le PRD retenu, à clarifier si le sélecteur de rôle doit un jour restreindre l'affichage.
+**Plan validé par le développeur le 2026-11-18**, construite en parallèle de l'Itération 12 par un sous-agent en worktree isolé (fichiers disjoints : dashboard côté frontend, pas l'API — le contrat d'endpoint a été fixé à l'avance pour permettre le parallélisme).
 
-### Itération 14 (candidate) : création manuelle d'un nouveau profil
+- **Dans le périmètre** : `POST /api/v1/profils` (corps `{nom, antenne}`, 201 + profil créé en BURN'ette, 400 si champs vides) ; bandeau « + Nouveau profil » sur le dashboard (remplace visuellement l'ancien bandeau Excel de la maquette, jamais implémenté) ouvrant un dialog natif avec formulaire minimal.
+- **Hors périmètre** : import Excel (confirmé par le développeur comme un besoin de migration batch séparé, pas un chemin d'usage courant — l'app doit être autonome sans lui) ; choix du statut initial (toujours BURN'ette, cohérent avec le parcours).
+- **Critères d'acceptation** :
+  - Étant donné le dashboard, quand on clique « + Nouveau profil » et qu'on remplit nom + antenne, alors le profil est créé en base et apparaît immédiatement dans la section BURN'ettes.
+  - Étant donné un formulaire incomplet, quand on tente de créer, alors le bouton reste désactivé (validation côté client) et l'API refuse aussi (400, validation côté serveur indépendante).
+  - Étant donné les tests existants + 3 nouveaux sur la validation du formulaire, quand on les rejoue, alors ils passent.
+- **Bilan** :
+  - Les 3 critères sont satisfaits : `curl -X POST .../api/v1/profils` testé en local contre la vraie base par le sous-agent avant intégration (contrat respecté), build et tests verts après fusion (14 tests frontend).
+  - Fusionné avec prudence : un commit d'une autre session active sur ce même dépôt (correctif de débordement CSS grid) a été détecté entre le lancement et la fusion de cet agent — repris sans perte en réappliquant seulement l'ajout du sous-agent (bandeau + dialog) par-dessus la version corrigée, au lieu d'écraser bêtement le fichier.
+  - **Modifications** : `api/src/routes.ts`/`db.ts` (`POST /api/v1/profils`, `creerProfil`, partagé avec l'Itération 12) ; `frontend/src/app/page.tsx`/`page.module.css` (bandeau) ; `frontend/src/components/NouveauProfilDialog.tsx`/`.module.css`/`.test.ts` (créés).
 
-- Précision du développeur : « il manque aussi une création manuelle de nouveaux profils, hors Excel. Le Excel servirait pour une migration batch, mais l'app doit être autonome par ailleurs. » → priorité à la création manuelle, l'import Excel reste un besoin de migration initiale séparé, pas un chemin d'usage courant.
-- Nouvel endpoint `POST /api/v1/profils` : génère un id, insère en base avec statut initial BURN'ette (`estActiv`/`estPairAidante` à `false`).
-- Dashboard : bouton « + Nouveau profil » (import-banner de la maquette, aujourd'hui juste décoratif, pourrait porter cette action à la place de l'import Excel), formulaire minimal (nom, antenne).
-- Indépendante des Itérations 12-13 : peut être construite en parallèle (fichiers distincts côté frontend, même table `profils` mais pas les mêmes routes API).
+---
 
-### Rappel : items déjà en liste, toujours en attente
+## En arrière-plan (sans commit) : gestion des formations
 
-- Ajout/modification d'une formation sur la fiche (nécessite une nouvelle table liée, le plus gros morceau restant — cf. ci-dessous).
-- Sous-progression interne par statut (candidature en cours/validée, formation/habilitation/supervision) — distincte de la réversibilité de l'Itération 12 : celle-ci porte sur les 3 paliers cumulatifs existants, la sous-progression ajouterait des états plus fins à l'intérieur de chaque palier.
+Lancé le 2026-11-18 à la demande du développeur : un pipeline d'agents planifie puis implémente la gestion des formations (lister/ajouter/modifier/supprimer une formation sur la fiche profil, persistée en base — le plus gros morceau encore manquant). Déroulé : planification → validation contre la documentation existante (PRD, règles métier, `adr.md`) → 2 tours de raffinement → implémentation dans un worktree isolé. **Volontairement non commité** : à relire et intégrer dans une itération dédiée une fois le résultat prêt.
+
+---
+
+## Rappel : items toujours en attente, non planifiés
+
+- Sous-progression interne par statut (candidature en cours/validée pour ACTIV' ; formation/habilitation/supervision pour Pair-aidante) — distincte de la réversibilité de l'Itération 12 (qui porte sur les 3 paliers cumulatifs existants, pas sur des états plus fins à l'intérieur de chaque palier).
 - Import Excel — migration batch initiale uniquement, confirmé secondaire par le développeur.
 - Filtrage du dashboard par antenne.
 - Édition du nom/de l'antenne d'un profil (❓ jamais demandée explicitement dans le PRD retenu).
+- Qui peut voir l'historique du statut (❓ non tranché).
 
 ---
 
@@ -312,8 +334,4 @@ Constat du développeur : le back-office est affiché mais très peu « gérable
 
 > Référence visuelle à jour : `maquettes/dashboard-fiche-profil.html` (commit `52c9ec6`, produit en parallèle de l'Itération 1), qui reprend la vraie palette du site L'BURN (contraste AA) au lieu de celle inventée par `passation/prototype/index.html`. Les tokens de couleur utilisés dans `frontend/src/app/page.module.css` sont déjà alignés dessus (mêmes valeurs `--lb-color-*`, mêmes couleurs par section). À comparer avant de coder l'écran suivant.
 
-**Ce qui reste pour que le back-office soit vraiment « gérable » » (retour du développeur, 2026-11-18)** — détaillé dans « Propositions pour la suite » ci-dessus (Itérations 12-14 candidates : réversibilité, historique, création manuelle de profil), plus :
-
-1. **Ajout / modification d'une formation sur la fiche profil** — bouton « + Ajouter » de la maquette non fonctionnel ; aucune table `formations` en base. Nécessite un nouveau modèle de données (table liée, clé étrangère vers `profils`) + endpoints CRUD + formulaire. La plus grosse brique de gestion restante, pas encore détaillée en itération.
-2. **Filtrage du dashboard par antenne** pour la directrice d'antenne — reporté, référentiel d'antenne pas encore tranché (cf. §4 et §7 de l'analyse).
-3. Sélecteur de rôle (Itération 6) encore **purement déclaratif** : choisir « Directrice d'antenne » ne restreint rien aujourd'hui (pas de filtrage par antenne, pas de droits différents) — cohérent avec le PRD (pas de vraie authentification), mais à garder en tête si la démo doit montrer une différence de comportement entre les deux rôles.
+Voir « En arrière-plan » et « Rappel » ci-dessus pour le détail à jour.

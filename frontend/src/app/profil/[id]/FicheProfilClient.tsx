@@ -3,13 +3,19 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
-import { LIBELLES_SINGULIER, etapeSuivante, sectionAffichee, type Profil } from "../../../lib/profils";
+import { LIBELLES_SINGULIER, sectionAffichee, type Profil, type Section } from "../../../lib/profils";
 import {
   construireProgression,
   trouverProfilDetail,
   type EtapeProgression,
   type ItemSuivi,
 } from "../../../lib/profilDetail";
+
+type EntreeHistorique = {
+  ancienStatut: Section;
+  nouveauStatut: Section;
+  date: string;
+};
 
 function initiales(nom: string): string {
   return nom
@@ -19,13 +25,34 @@ function initiales(nom: string): string {
     .toUpperCase();
 }
 
-function EtapeProgressionCarte({ etape }: { etape: EtapeProgression }) {
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function EtapeProgressionCarte({
+  etape,
+  onChoisir,
+}: {
+  etape: EtapeProgression;
+  onChoisir: (cle: Section) => void;
+}) {
   const classeEtat = etape.etat === "fait" ? styles.fait : etape.etat === "actuelle" ? styles.actuelle : "";
   return (
-    <div className={`${styles.statutStep} ${classeEtat}`}>
+    <button
+      type="button"
+      className={`${styles.statutStep} ${classeEtat}`}
+      disabled={etape.etat === "actuelle"}
+      onClick={() => onChoisir(etape.cle)}
+    >
       <div className={styles.stepIcon}>{etape.icone}</div>
       <span className={styles.stepLabel}>{etape.libelle}</span>
-    </div>
+    </button>
   );
 }
 
@@ -101,23 +128,30 @@ function Topbar() {
 
 export default function FicheProfilClient({ id }: { id: string }) {
   const [profil, setProfil] = useState<Profil | null>(null);
+  const [historique, setHistorique] = useState<EntreeHistorique[]>([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(false);
   const [version, setVersion] = useState(0);
   const [enCoursValidation, setEnCoursValidation] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
+  const [cibleChangement, setCibleChangement] = useState<Section | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     let ignore = false;
     async function charger() {
       try {
-        const reponse = await fetch("/api/v1/profils");
-        if (!reponse.ok) throw new Error("Réponse API non ok");
-        const profils: Profil[] = await reponse.json();
+        const [reponseProfils, reponseHistorique] = await Promise.all([
+          fetch("/api/v1/profils"),
+          fetch(`/api/v1/profils/${id}/historique`),
+        ]);
+        if (!reponseProfils.ok) throw new Error("Réponse API non ok");
+        const profils: Profil[] = await reponseProfils.json();
         const trouve = profils.find((candidat) => candidat.id === id) ?? null;
+        const histo: EntreeHistorique[] = reponseHistorique.ok ? await reponseHistorique.json() : [];
         if (ignore) return;
         setProfil(trouve);
+        setHistorique(histo);
         setErreur(false);
       } catch {
         if (!ignore) setErreur(true);
@@ -131,16 +165,33 @@ export default function FicheProfilClient({ id }: { id: string }) {
     };
   }, [id, version]);
 
-  async function validerNouveauStatut() {
+  function demanderConfirmation(cle: Section) {
+    setCibleChangement(cle);
+    dialogRef.current?.showModal();
+  }
+
+  function annulerConfirmation() {
+    dialogRef.current?.close();
+    setCibleChangement(null);
+  }
+
+  async function validerChangement() {
+    if (!cibleChangement) return;
+    const cible = cibleChangement;
     dialogRef.current?.close();
     setEnCoursValidation(true);
     try {
-      await fetch(`/api/v1/profils/${id}/statut`, { method: "PATCH" });
+      await fetch(`/api/v1/profils/${id}/statut`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ etape: cible }),
+      });
       setVersion((valeurPrecedente) => valeurPrecedente + 1);
       setConfirmation(true);
       setTimeout(() => setConfirmation(false), 2800);
     } finally {
       setEnCoursValidation(false);
+      setCibleChangement(null);
     }
   }
 
@@ -170,7 +221,10 @@ export default function FicheProfilClient({ id }: { id: string }) {
   const progression = construireProgression(etapeActuelle);
   const detail = trouverProfilDetail(id);
   const depuis = detail?.depuis ?? `Membre de l'antenne ${profil.antenne}`;
-  const suivante = etapeSuivante(etapeActuelle);
+
+  const indexActuelle = progression.findIndex((etape) => etape.cle === etapeActuelle);
+  const indexCible = cibleChangement ? progression.findIndex((etape) => etape.cle === cibleChangement) : -1;
+  const estRecul = indexCible !== -1 && indexCible < indexActuelle;
 
   return (
     <div className={styles.phoneShell}>
@@ -192,10 +246,14 @@ export default function FicheProfilClient({ id }: { id: string }) {
             {progression.map((etape, index) => (
               <Fragment key={etape.cle}>
                 {index > 0 && <span className={styles.statutArrow}>→</span>}
-                <EtapeProgressionCarte etape={etape} />
+                <EtapeProgressionCarte etape={etape} onChoisir={demanderConfirmation} />
               </Fragment>
             ))}
           </div>
+          <p className={styles.statutAide}>
+            Cliquer une étape pour y faire passer {profil.nom.split(" ")[0]} (avancer ou revenir en
+            arrière).
+          </p>
         </div>
 
         <div className={styles.suiviGrid}>
@@ -216,39 +274,55 @@ export default function FicheProfilClient({ id }: { id: string }) {
             ))}
           </div>
         </div>
+
+        <div className={styles.historiqueSection}>
+          <p className={styles.historiqueTitre}>🕓 Historique du statut</p>
+          {historique.length === 0 ? (
+            <p className={styles.historiqueVide}>Aucun changement de statut pour l&apos;instant.</p>
+          ) : (
+            <ul className={styles.historiqueListe}>
+              {historique.map((entree, index) => (
+                <li key={`${entree.date}-${index}`} className={styles.historiqueLigne}>
+                  <span className={styles.historiqueTransition}>
+                    {LIBELLES_SINGULIER[entree.ancienStatut]} → {LIBELLES_SINGULIER[entree.nouveauStatut]}
+                  </span>
+                  <span className={styles.historiqueDate}>{formatDate(entree.date)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
-      {suivante && (
-        <div className={styles.ctaBar}>
-          <button
-            type="button"
-            className={styles.btnValider}
-            onClick={() => dialogRef.current?.showModal()}
-            disabled={enCoursValidation}
-          >
-            {enCoursValidation ? "Validation…" : "Je valide le nouveau statut et l'habilitation"}
-          </button>
-        </div>
-      )}
       {confirmation && <div className={styles.toast}>✓ Statut mis à jour — habilitation tracée !</div>}
 
-      {suivante && (
-        <dialog ref={dialogRef} className={styles.dialogConfirmation}>
-          <p className={styles.dialogTexte}>
-            Faire passer <strong>{profil.nom}</strong> de {LIBELLES_SINGULIER[etapeActuelle]} à{" "}
-            <strong>{LIBELLES_SINGULIER[suivante]}</strong> ? L&apos;habilitation sera tracée avec cette
-            date.
-          </p>
-          <div className={styles.dialogActions}>
-            <button type="button" className={styles.dialogAnnuler} onClick={() => dialogRef.current?.close()}>
-              Annuler
-            </button>
-            <button type="button" className={styles.dialogConfirmer} onClick={validerNouveauStatut}>
-              Confirmer
-            </button>
-          </div>
-        </dialog>
-      )}
+      <dialog ref={dialogRef} className={styles.dialogConfirmation}>
+        {cibleChangement && (
+          <>
+            <p className={styles.dialogTexte}>
+              {estRecul && <strong className={styles.dialogAlerte}>⚠️ Retour en arrière — </strong>}
+              Faire passer <strong>{profil.nom}</strong> de {LIBELLES_SINGULIER[etapeActuelle]} à{" "}
+              <strong>{LIBELLES_SINGULIER[cibleChangement]}</strong> ?{" "}
+              {estRecul
+                ? "L'habilitation visée par le statut actuel sera retirée."
+                : "L'habilitation sera tracée avec cette date."}
+            </p>
+            <div className={styles.dialogActions}>
+              <button type="button" className={styles.dialogAnnuler} onClick={annulerConfirmation}>
+                Annuler
+              </button>
+              <button
+                type="button"
+                className={styles.dialogConfirmer}
+                onClick={validerChangement}
+                disabled={enCoursValidation}
+              >
+                {enCoursValidation ? "Validation…" : "Confirmer"}
+              </button>
+            </div>
+          </>
+        )}
+      </dialog>
     </div>
   );
 }

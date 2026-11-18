@@ -56,6 +56,52 @@
   padding: 20px 16px 40px;
 }
 
+.nouveauProfilBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: none;
+  border-radius: var(--lb-radius-card);
+  background: var(--lb-color-pink-soft);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--lb-font-body);
+}
+
+.nouveauProfilIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--lb-color-white);
+  color: var(--lb-color-primary);
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nouveauProfilText {
+  display: flex;
+  flex-direction: column;
+}
+
+.nouveauProfilTitle {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--lb-color-text);
+}
+
+.nouveauProfilSub {
+  font-size: 12px;
+  color: var(--lb-color-muted);
+  margin-top: 2px;
+}
+
 .filterBar {
   display: flex;
   align-items: center;

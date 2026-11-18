@@ -1,0 +1,89 @@
+.dialog {
+  border: none;
+  border-radius: var(--lb-radius-card);
+  padding: 0;
+  width: min(90vw, 380px);
+  color: var(--lb-color-text);
+  font-family: var(--lb-font-body);
+}
+
+.dialog::backdrop {
+  background: rgba(35, 38, 47, 0.5);
+}
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px 20px;
+}
+
+.titre {
+  font-family: var(--lb-font-heading);
+  font-size: 18px;
+  margin: 0;
+  color: var(--lb-color-text);
+}
+
+.champ {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lb-color-muted);
+}
+
+.champ input {
+  border: 1.5px solid var(--lb-color-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 15px;
+  font-family: var(--lb-font-body);
+  color: var(--lb-color-text);
+}
+
+.champ input:focus {
+  outline: none;
+  border-color: var(--lb-color-primary);
+}
+
+.erreur {
+  font-size: 13px;
+  color: var(--lb-color-primary);
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.annuler {
+  padding: 8px 16px;
+  border-radius: var(--lb-radius-button);
+  border: 1.5px solid var(--lb-color-text);
+  background: var(--lb-color-white);
+  color: var(--lb-color-text);
+  font-family: var(--lb-font-body);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.valider {
+  padding: 8px 16px;
+  border-radius: var(--lb-radius-button);
+  border: none;
+  background: var(--lb-color-primary);
+  color: var(--lb-color-white);
+  font-family: var(--lb-font-body);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.valider:disabled {
+  background: var(--lb-color-border);
+  color: var(--lb-color-muted);
+}
