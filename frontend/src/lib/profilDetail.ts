@@ -154,6 +154,91 @@ export const profilsDetailExemple: ProfilDetail[] = [
       { libelle: "Ven. après-midi", disponible: true },
     ],
   },
+  {
+    id: "2",
+    nom: "Marie Courtin",
+    antenne: "Lille",
+    depuis: "BURN'ette · membre depuis le 02/09/2026",
+    etapeActuelle: "burnette",
+    progression: construireProgression("burnette"),
+    formations: [
+      { nom: "Tronc commun vidéo", icone: "🎬", date: "Complété le 12/09/2026", etat: "termine" },
+      { nom: "Module 2 BBA", icone: "📘", date: "En cours — 1 séance faite", etat: "en-cours" },
+      { nom: "Module 3 BBA", icone: "📘", date: "Pas encore commencé", etat: "a-faire" },
+    ],
+    ateliers: [
+      {
+        nom: "Atelier BURN'ette — Découverte",
+        icone: "🗣️",
+        date: "18/11/2026 · Lille · En attente de validation",
+        etat: "a-faire",
+      },
+    ],
+    disponibilites: [
+      { libelle: "Lun. soir", disponible: true },
+      { libelle: "Mer. matin", disponible: false },
+      { libelle: "Sam. après-midi", disponible: true },
+    ],
+  },
+  {
+    id: "4",
+    nom: "Céline Rousseau",
+    antenne: "Lille",
+    depuis: "BURN'ette × ACTIV' · membre depuis le 20/06/2026",
+    etapeActuelle: "activ",
+    progression: construireProgression("activ"),
+    formations: [
+      { nom: "Tronc commun vidéo", icone: "🎬", date: "Complété le 28/06/2026", etat: "termine" },
+      { nom: "Formation modération", icone: "🛡️", date: "Complété le 10/07/2026", etat: "termine" },
+      {
+        nom: "Formation pair-aidance (2 × 3 h)",
+        icone: "🤝",
+        date: "Pas encore commencé",
+        etat: "a-faire",
+      },
+    ],
+    ateliers: [
+      { nom: "Atelier BURN'ette animé", icone: "🗣️", date: "14/09/2026 · Lille", etat: "termine" },
+    ],
+    disponibilites: [
+      { libelle: "Mar. matin", disponible: true },
+      { libelle: "Jeu. après-midi", disponible: true },
+      { libelle: "Ven. soir", disponible: false },
+    ],
+  },
+  {
+    id: "6",
+    nom: "Florence Genet",
+    antenne: "Lille",
+    depuis: "BURN'ette × ACTIV' × Pair-aidante · membre depuis le 05/03/2025",
+    etapeActuelle: "pairaidante",
+    progression: construireProgression("pairaidante"),
+    formations: [
+      { nom: "Tronc commun vidéo", icone: "🎬", date: "Complété le 15/03/2025", etat: "termine" },
+      { nom: "Formation modération", icone: "🛡️", date: "Complété le 02/04/2025", etat: "termine" },
+      {
+        nom: "Formation pair-aidance (2 × 3 h)",
+        icone: "🤝",
+        date: "Complété le 30/04/2025",
+        etat: "termine",
+      },
+      { nom: "Supervision pair-aidance", icone: "🔬", date: "En cours", etat: "en-cours" },
+    ],
+    ateliers: [
+      { nom: "Permanence d'écoute", icone: "☎️", date: "Habilitation active", etat: "termine" },
+      {
+        nom: "Prochaine permanence",
+        icone: "☎️",
+        date: "27/11/2026 · Lille",
+        etat: "a-faire",
+      },
+    ],
+    disponibilites: [
+      { libelle: "Lun. après-midi", disponible: true },
+      { libelle: "Mer. soir", disponible: true },
+      { libelle: "Dim. matin", disponible: false },
+    ],
+  },
 ];
 
 export function trouverProfilDetail(id: string): ProfilDetail | undefined {

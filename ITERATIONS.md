@@ -204,6 +204,15 @@ Signalée par le développeur (capture d'écran + erreurs console) après le dé
 - **Correction** : `script-src 'self' 'unsafe-inline'` ajouté au CSP (seuls nos propres scripts, bundlés ou inline, s'exécutent — toujours aucun CDN ni domaine tiers autorisé). Corrigé en même temps : la topbar qui débordait (ajout de `flex-wrap` et d'une largeur maximale sur le sélecteur de rôle, le `SelecteurRole` n'avait pas été pensé pour la largeur `max-width: 430px` du dashboard mobile).
 - **Vérifié** : en-tête `Content-Security-Policy` confirmé en sortie (`curl -D -`), 14/14 tests toujours verts, contrat de déployabilité propre. **Non vérifiable depuis cette machine** : l'exécution réelle dans un navigateur sur `$URL_PUBLIQUE` — à confirmer par le développeur.
 - **Fichiers** : `frontend/nginx.conf`, `frontend/src/app/page.module.css`, `frontend/src/components/SelecteurRole.module.css`.
+- **Confirmé par le développeur le 2026-11-18** : le correctif résout le problème, l'application fonctionne.
+
+### Suite immédiate : lien dashboard → fiche profil câblé
+
+Question du développeur après le correctif : « toujours pas de page profil, c'est normal ? » — oui, documenté depuis l'Itération 4 (données simulées limitées à 3 profils sur 6, lien volontairement non câblé). Correction :
+- `frontend/src/lib/profilDetail.ts` : ajout des 3 profils manquants (Marie Courtin, Céline Rousseau, Florence Genet — mêmes nom/antenne/statut que les vraies données Postgres de l'Itération 5), les 6 profils du dashboard ont désormais une fiche.
+- `frontend/src/app/page.tsx`, `page.module.css` : chaque ligne de profil est un lien (`next/link`) vers `/profil/<id>` (avatar + nom + antenne cliquables ; badge et bouton « statut suivant » restent hors du lien, pas d'élément interactif imbriqué dans un autre).
+- Vérifié : `npm run build` génère bien les 6 pages `/profil/1` à `/profil/6` (au lieu de 3), 14/14 tests toujours verts, déployé et vérifié (`curl` 200 sur les 6 routes).
+- Reste non traité, inchangé : la fiche profil montre des données simulées indépendantes, pas les vraies données Postgres (formations/disponibilités n'existent pas encore en base) — cf. « À venir ».
 
 ---
 

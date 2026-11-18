@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import styles from "./page.module.css";
 import SelecteurRole from "../components/SelecteurRole";
 import {
@@ -40,11 +41,13 @@ function SectionProfils({
       <div className={styles.profileList}>
         {profils.map((profil) => (
           <div className={styles.profileRow} key={profil.id}>
-            <div className={`${styles.avatar} ${styles[section]}`}>{initiales(profil.nom)}</div>
-            <div className={styles.profileInfo}>
-              <div className={styles.profileName}>{profil.nom}</div>
-              <div className={styles.profileMeta}>Antenne {profil.antenne}</div>
-            </div>
+            <Link href={`/profil/${profil.id}`} className={styles.profileLien}>
+              <div className={`${styles.avatar} ${styles[section]}`}>{initiales(profil.nom)}</div>
+              <div className={styles.profileInfo}>
+                <div className={styles.profileName}>{profil.nom}</div>
+                <div className={styles.profileMeta}>Antenne {profil.antenne}</div>
+              </div>
+            </Link>
             <span className={`${styles.badgeStatut} ${styles[section]}`}>
               {LIBELLES_SINGULIER[section]}
             </span>
