@@ -49,6 +49,7 @@
     - `frontend/nginx.conf` (édité) : en-têtes de sécurité (CSP, X-Frame-Options…) adaptés du gabarit de la plateforme.
     - `podman-compose.yml` (créé) : recette de déploiement à la racine, cf. `/CLAUDE.md` du serveur.
     - `e2e/demo.spec.ts` (édité) : étape « je vois le dashboard » ajoutée.
+  - **Mini-revue du 2026-11-18** (sous-agent `reviewer`, après les itérations 2-4) : les 3 critères PASS, aucune régression introduite par les itérations suivantes sur `sectionAffichee`/`regrouperParSection`. Rien à corriger.
 
 ---
 
@@ -83,6 +84,7 @@ Origine : retour du développeur après l'Itération 1 — l'écran en ligne « 
     - `frontend/src/app/page.module.css` (réécrit) : styles repris de `maquettes/dashboard-fiche-profil.html` (tokens `--lb-color-muted`/`--lb-color-border`, couleurs avatar/badge exactes par section, dont le badge ACTIV' contour rouge sur fond blanc pour l'AA) — sert le critère 2.
     - `frontend/src/app/globals.css` (édité) : `font-family: var(--lb-font-body)` sur `body` au lieu d'Arial en dur — sert le critère 1.
     - `maquettes/dashboard-desktop.html` (créé, par le sous-agent `maquettiste`) : proposition de mise en page desktop (grille 3 colonnes ≥1024px), hors périmètre de cette itération — reportée en « À venir ».
+  - **Mini-revue du 2026-11-18** (sous-agent `reviewer`) : les 3 critères PASS — police réellement chargée (vérifié dans le CSS compilé et le HTML servi), couleurs/badges/avatars conformes à la maquette, tests verts. Rien à corriger.
 
 ---
 
@@ -111,6 +113,7 @@ Origine : retour du développeur après l'Itération 1 — l'écran en ligne « 
     - `frontend/src/lib/profils.ts` (édité) : fonction `filtrerProfils` (normalisation accents/casse, filtre nom + antenne) — sert les critères 1 et 3.
     - `frontend/src/lib/profils.test.ts` (édité) : 3 tests sur `filtrerProfils` — sert le critère 3.
     - `frontend/src/app/page.tsx` (édité) : passage en composant client (`"use client"`), state `recherche`/`sectionActive`, chips devenus des boutons cliquables, champ de recherche contrôlé — sert les critères 1 et 2.
+  - **Mini-revue du 2026-11-18** (sous-agent `reviewer`) : les 3 critères PASS (vérification par lecture de code + tests, pas d'interaction navigateur réelle possible pour ce rôle). Filtrage réellement effectif (pas cosmétique), normalisation accents/casse correcte. Rien à corriger.
 
 ---
 
@@ -133,6 +136,42 @@ Origine : retour du développeur après l'Itération 1 — l'écran en ligne « 
     - `frontend/src/lib/profilDetail.ts` (créé, sous-agent) : données d'exemple pour 3 profils (un par étape de statut), indépendant de `profils.ts`.
     - `frontend/src/app/profil/[id]/page.tsx` (créé, sous-agent) : route App Router, Server Component, `generateStaticParams` pour l'export statique — sert le critère 1.
     - `frontend/src/app/profil/[id]/page.module.css` (créé, sous-agent) : styles repris de la maquette, mêmes tokens de couleur que le dashboard — sert le critère 1.
+  - **Mini-revue du 2026-11-18** (sous-agent `reviewer`) : les 2 critères PASS, `git show --stat` confirme qu'aucun fichier partagé n'a été touché. Rien à corriger.
+
+---
+
+## Itération 5 : persistance Postgres + édition du statut
+
+**Plan validé par le développeur le 2026-11-18** (consigne : enchaîner les itérations suivantes, parallélisées, budget porté à ~15 min/itération). Stockage et scope réduit consignés dans `adr.md` (entrée du 2026-11-18, « persistance réduite aux deux booléens existants »).
+
+- **Dans le périmètre** : base `team39` (déjà créée sur `postgres.internal`), table `profils` (id, nom, antenne, est_activ, est_pair_aidante) + seed des 6 profils d'exemple actuels ; `GET /api/v1/profils` (liste) ; `PATCH /api/v1/profils/:id/statut` (fait passer au statut suivant, idempotent si déjà pair-aidante) ; le dashboard lit l'API au lieu du tableau en dur, bouton « statut suivant » par ligne.
+- ❗️ **Dépendance nouvelle** : `pg` (client Postgres officiel) dans `api/package.json` — aucune alternative sans dépendance pour parler à Postgres depuis Node.
+- **Hors périmètre** : sous-progression interne (reportée, cf. `adr.md`), authentification sur le PATCH, alignement de `/profil/[id]` (Itération 4) sur les mêmes données — reportés.
+- **Critères d'acceptation** :
+  - Étant donné le dashboard ouvert, quand la page charge, alors les profils viennent de l'API (vérifiable : un redémarrage du conteneur `api` ne perd pas les données, contrairement au tableau en dur).
+  - Étant donné une BURN'ette, quand on clique « statut suivant », alors elle passe en ACTIV' en base et à l'écran après rafraîchissement.
+  - Étant donné les tests Vitest existants sur `regrouperParSection`/`filtrerProfils`, quand on les rejoue, alors ils passent (modèle de données frontend inchangé).
+- **Codage estimé** : 15 minutes (budget resserré demandé par le développeur).
+- **Fichiers prévus** : `api/src/db.ts` (nouveau), `api/src/routes.ts`, `api/src/routes.test.ts`, `api/package.json`, `podman-compose.yml` (variables `DB_*` sur le service `api`), `frontend/src/app/page.tsx` (fetch + action), `frontend/src/lib/profils.ts` (ajustements de type si besoin).
+- **Construction** : backend (`api/`) délégué à un sous-agent en worktree isolé (aucun fichier commun avec le reste en cours) ; câblage frontend (`page.tsx`) fait par la session principale une fois le contrat d'API confirmé, pour éviter un conflit avec d'autres écritures sur ce fichier.
+- **Bilan** : _à remplir en fin d'itération._
+
+---
+
+## Itération 6 : sélecteur « Qui êtes-vous ? »
+
+**Plan proposé par l'agent le 2026-11-18, en cours d'exécution en parallèle de l'Itération 5** (consigne du développeur de paralléliser au maximum).
+
+- **Dans le périmètre** : un sélecteur de rôle (options du PRD, ex. Bénévole / Directrice d'antenne / BURN'ette), changement sans connexion, choix mémorisé en `localStorage` pour survivre à un rechargement. Purement déclaratif pour l'instant (n'altère pas encore les données affichées).
+- **Hors périmètre** : permissions réelles liées au rôle, persistance serveur, filtrage du dashboard par rôle — reportés.
+- **Critères d'acceptation** :
+  - Étant donné le dashboard ouvert, quand on regarde la topbar, alors un sélecteur de rôle est visible avec les options du PRD.
+  - Étant donné un rôle choisi, quand on recharge la page, alors le même rôle reste affiché (persistance `localStorage`).
+  - Étant donné les tests existants, quand on les rejoue, alors ils passent toujours.
+- **Codage estimé** : 15 minutes.
+- **Fichiers prévus** : `frontend/src/components/SelecteurRole.tsx` (nouveau, composant autonome), `frontend/src/components/SelecteurRole.module.css` (nouveau). Pas de modification de `page.tsx` par le sous-agent — l'intégration (une ligne dans la topbar) est faite par la session principale après coup, pour éviter un conflit avec le câblage de l'Itération 5 sur ce même fichier.
+- **Construction** : déléguée à un sous-agent en worktree isolé.
+- **Bilan** : _à remplir en fin d'itération._
 
 ---
 
@@ -140,12 +179,9 @@ Origine : retour du développeur après l'Itération 1 — l'écran en ligne « 
 
 > Référence visuelle à jour : `maquettes/dashboard-fiche-profil.html` (commit `52c9ec6`, produit en parallèle de l'Itération 1), qui reprend la vraie palette du site L'BURN (contraste AA) au lieu de celle inventée par `passation/prototype/index.html`. Les tokens de couleur utilisés dans `frontend/src/app/page.module.css` sont déjà alignés dessus (mêmes valeurs `--lb-color-*`, mêmes couleurs par section). À comparer avant de coder l'écran suivant.
 
-1. **Itération 5 (candidate)** : persistance Postgres de la fiche profil + édition du statut ACTIV' → Pair-aidante (dépend de l'Itération 4). Décidé avec le développeur le 2026-11-18 : la base de données arrive à cette itération, pas avant. À détailler précisément (et probablement re-découper si trop gros une fois chiffré) au moment de sa planification — voir les règles de taille de `CLAUDE.md` §3. Points à trancher avant de coder :
-   - Stockage : Postgres (service du compose, volume nommé), pas SQLite — imposé par `docs/contrat-deployabilite.md` règle 6. Décision à consigner dans `adr.md` avant d'écrire du code.
-   - Sous-progression interne à chaque statut (candidature « en cours » / « validée » pour ACTIV' ; formation / habilitation / supervision séparées pour Pair-aidante) — proposition graphique à faire avant de coder (décision du 2026-11-18, `adr.md`).
+1. Sous-progression interne par statut (candidature en cours/validée pour ACTIV' ; formation/habilitation/supervision pour Pair-aidante) — dépend de l'Itération 5, proposition graphique à faire avant de coder (cf. `adr.md`).
 2. Ajout / modification d'une formation sur la fiche profil.
-3. Lien cliquable dashboard → fiche profil (câblage de `page.tsx` vers `/profil/[id]`, une fois l'Itération 4 fusionnée).
-4. Sélecteur « Qui êtes-vous ? » (changement de rôle sans connexion, cf. PRD).
-5. Import Excel avec correspondance manuelle des colonnes (pas de mapping automatique — colonnes réelles inconnues, cf. `docs/analyse-maquette-donnees-asso.md` §6).
-6. Filtrage du dashboard par antenne pour la directrice d'antenne — reporté, non géré aujourd'hui (référentiel d'antenne pas encore tranché, cf. §4 et §7 de l'analyse).
-7. ⚠️ **Version desktop responsive du dashboard** — demande du développeur en cours d'Itération 2, hors périmètre (passation et plan initial ne couvraient que du mobile). Une maquette cliquable existe déjà : `maquettes/dashboard-desktop.html` (grille 3 colonnes ≥1024px, bascule en 1 colonne en dessous, mêmes tokens de charte). Reste à trancher avec les cadreurs : priorité de cette itération par rapport au reste de la liste, et si le découpage en 3 colonnes par statut convient (choix du sous-agent `maquettiste`, pas une spécification validée). Implémentation (media queries dans `page.module.css`) non codée — pas d'ambiguïté de fichiers avec le reste de la liste, se glisse à n'importe quel rang une fois priorisée.
+3. Lien cliquable dashboard → fiche profil, une fois les données de `/profil/[id]` alignées sur celles de l'API (Itération 5).
+4. Import Excel avec correspondance manuelle des colonnes (pas de mapping automatique — colonnes réelles inconnues, cf. `docs/analyse-maquette-donnees-asso.md` §6).
+5. Filtrage du dashboard par antenne pour la directrice d'antenne — reporté, non géré aujourd'hui (référentiel d'antenne pas encore tranché, cf. §4 et §7 de l'analyse).
+6. ⚠️ **Version desktop responsive du dashboard** — demande du développeur en cours d'Itération 2, hors périmètre (passation et plan initial ne couvraient que du mobile). Une maquette cliquable existe déjà : `maquettes/dashboard-desktop.html` (grille 3 colonnes ≥1024px, bascule en 1 colonne en dessous, mêmes tokens de charte). Reste à trancher avec les cadreurs : priorité de cette itération par rapport au reste de la liste. Implémentation (media queries dans `page.module.css`) non codée.
