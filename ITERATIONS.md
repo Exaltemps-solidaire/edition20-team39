@@ -52,14 +52,50 @@
 
 ---
 
+## Itération 2 : le dashboard respecte vraiment la charte graphique L'BURN
+
+**Plan validé par le développeur le 2026-11-18.** Temps restant annoncé au début de cette itération : ~20 minutes — un peu court face à l'estimation 8 min codage + 5 min publication + 10 min tour de test (~23 min), mais acceptable car l'itération ne touche qu'au style/aux polices, sans nouvelle logique ni nouveaux tests. Consigne d'exécution du développeur : paralléliser le travail sur autant d'agents que possible.
+
+Origine : retour du développeur après l'Itération 1 — l'écran en ligne « ressemble approximativement » à la maquette mais « les styles ne sont pas vraiment respectés ». Cause identifiée : les polices Archivo Black et Libre Franklin ne sont jamais chargées (ni Google Fonts, ni `next/font`), le nom de police seul dans le CSS ne suffit pas — tout retombe sur Arial. Correction de fidélité visuelle sur l'écran déjà livré, pas une nouvelle fonctionnalité.
+
+- **Dans le périmètre** :
+  - Charger les polices Archivo Black (titres) et Libre Franklin (texte) via `next/font/google`.
+  - Reprendre le CSS du dashboard de `maquettes/dashboard-fiche-profil.html` (déjà fidèle à la charte, contraste AA validé) pour `frontend/src/app/page.module.css`, au lieu du CSS approximatif écrit en Itération 1.
+  - Revérifier que les trois sections restent correctement classées (non-régression du critère 2 de l'Itération 1).
+- **Hors périmètre** : recherche/filtre fonctionnels, fiche profil, tout ce qui est déjà listé en « À venir » ci-dessous — inchangé.
+- **Critères d'acceptation** :
+  - Étant donné le dashboard ouvert sur `localhost:8080`, quand la page se charge, alors les titres s'affichent en Archivo Black et le texte en Libre Franklin (police réellement chargée, vérifiable dans les outils de dev du navigateur).
+  - Étant donné le dashboard, quand on le compare à `maquettes/dashboard-fiche-profil.html`, alors les couleurs, badges et avatars par section correspondent (même palette, mêmes styles de badge).
+  - Étant donné les tests Vitest existants sur `regrouperParSection`, quand on les rejoue, alors ils passent toujours (aucune régression du modèle de données).
+- **Hypothèse de l'équipe couverte** : aucune — correction de qualité sur le périmètre déjà livré, pas une hypothèse testée avec l'équipe.
+- **Codage estimé** : 8 minutes.
+- **Fichiers prévus** : `frontend/src/app/layout.tsx` (chargement des polices), `frontend/src/app/page.module.css` (styles repris de la maquette), `frontend/src/app/page.tsx` (ajustements de balisage si nécessaire).
+- **Tests unitaires prévus** : aucun nouveau (pas de nouvelle logique métier ; les 3 tests existants suffisent, c'est du balisage/style pur).
+- **Étapes ajoutées à la démo** : aucune (pas de nouveau comportement à démontrer).
+- **Bilan** :
+  - Durée de codage réelle : 2 minutes (budget 8 minutes, pas d'alarme).
+  - Les 3 critères d'acceptation sont satisfaits : polices chargées via `next/font/google` et vérifiées dans le HTML de prod (`--lb-font-heading:"Archivo Black", "Archivo Black Fallback"` effectivement posé sur `<html>`) ; CSS du dashboard repris de `maquettes/dashboard-fiche-profil.html` (couleurs, badges, avatars par section) ; les 3 tests Vitest existants sur `regrouperParSection` passent toujours (`npm test`).
+  - Rien n'est reporté côté critères d'acceptation.
+  - Parallélisation demandée par le développeur : une demande hors périmètre est arrivée en cours de codage (version desktop responsive du dashboard) — taillée à part plutôt que codée dans cette itération (✂️, cf. note ci-dessous et « À venir »). Déléguée en parallèle au sous-agent `maquettiste`, sans conflit de fichiers avec le codage de cette itération (nouveau fichier dans `maquettes/`, rien touché dans `frontend/`). Le reste du travail de cette itération (2 fichiers, séquentiel : polices puis CSS) ne se prêtait pas à un découpage en plusieurs agents sans surcoût de coordination (cf. `CLAUDE.md` §4, « Pourquoi si peu de rôles ») — fait directement par la session.
+  - Rien bloqué par le harnais : tests verts, contrat de déployabilité propre (`./scripts/verifier-deployabilite.sh` → aucune borne).
+  - **Modifications** :
+    - `frontend/src/app/layout.tsx` (édité) : chargement `Archivo_Black` et `Libre_Franklin` via `next/font/google`, variables CSS `--lb-font-heading`/`--lb-font-body` posées sur `<html>` — sert le critère 1.
+    - `frontend/src/app/page.module.css` (réécrit) : styles repris de `maquettes/dashboard-fiche-profil.html` (tokens `--lb-color-muted`/`--lb-color-border`, couleurs avatar/badge exactes par section, dont le badge ACTIV' contour rouge sur fond blanc pour l'AA) — sert le critère 2.
+    - `frontend/src/app/globals.css` (édité) : `font-family: var(--lb-font-body)` sur `body` au lieu d'Arial en dur — sert le critère 1.
+    - `maquettes/dashboard-desktop.html` (créé, par le sous-agent `maquettiste`) : proposition de mise en page desktop (grille 3 colonnes ≥1024px), hors périmètre de cette itération — reportée en « À venir ».
+
+---
+
 ## À venir (liste ordonnée, à détailler au fil de l'eau)
 
 > Référence visuelle à jour : `maquettes/dashboard-fiche-profil.html` (commit `52c9ec6`, produit en parallèle de l'Itération 1), qui reprend la vraie palette du site L'BURN (contraste AA) au lieu de celle inventée par `passation/prototype/index.html`. Les tokens de couleur utilisés dans `frontend/src/app/page.module.css` sont déjà alignés dessus (mêmes valeurs `--lb-color-*`, mêmes couleurs par section). À comparer avant de coder l'écran suivant.
 
-1. Fiche profil (écran 2) : navigation depuis le dashboard, affichage figé (nom, antenne, date d'entrée, sous-progression par statut) — reprendre `maquettes/dashboard-fiche-profil.html`.
-2. Édition du statut ACTIV' → Pair-aidante, avec sous-progression interne à chaque statut (candidature « en cours » / « validée » pour ACTIV' ; formation / habilitation / supervision séparées pour Pair-aidante) — proposition graphique à faire **avant** de coder cette itération (décision du 2026-11-18, `adr.md`).
-3. Ajout / modification d'une formation sur la fiche profil.
-4. Recherche et filtre fonctionnels sur le dashboard.
-5. Sélecteur « Qui êtes-vous ? » (changement de rôle sans connexion, cf. PRD).
-6. Import Excel avec correspondance manuelle des colonnes (pas de mapping automatique — colonnes réelles inconnues, cf. `docs/analyse-maquette-donnees-asso.md` §6).
-7. Filtrage du dashboard par antenne pour la directrice d'antenne — reporté, non géré aujourd'hui (référentiel d'antenne pas encore tranché, cf. §4 et §7 de l'analyse).
+1. **Itération 3 (candidate)** : fiche profil (écran 2, reprendre `maquettes/dashboard-fiche-profil.html`) + base de données + édition du statut ACTIV' → Pair-aidante. Regroupés car l'un ne sert à rien sans l'autre (pas d'écran à éditer sans fiche profil, pas d'édition qui tienne sans persistance). Décidé avec le développeur le 2026-11-18 : la base de données arrive à cette itération, pas avant. À détailler précisément (et probablement re-découper si trop gros une fois chiffré) au moment de sa planification — voir les règles de taille de `CLAUDE.md` §3. Points à trancher avant de coder :
+   - Stockage : Postgres (service du compose, volume nommé), pas SQLite — imposé par `docs/contrat-deployabilite.md` règle 6. Décision à consigner dans `adr.md` avant d'écrire du code.
+   - Sous-progression interne à chaque statut (candidature « en cours » / « validée » pour ACTIV' ; formation / habilitation / supervision séparées pour Pair-aidante) — proposition graphique à faire avant de coder (décision du 2026-11-18, `adr.md`).
+2. Ajout / modification d'une formation sur la fiche profil.
+3. Recherche et filtre fonctionnels sur le dashboard.
+4. Sélecteur « Qui êtes-vous ? » (changement de rôle sans connexion, cf. PRD).
+5. Import Excel avec correspondance manuelle des colonnes (pas de mapping automatique — colonnes réelles inconnues, cf. `docs/analyse-maquette-donnees-asso.md` §6).
+6. Filtrage du dashboard par antenne pour la directrice d'antenne — reporté, non géré aujourd'hui (référentiel d'antenne pas encore tranché, cf. §4 et §7 de l'analyse).
+7. ⚠️ **Version desktop responsive du dashboard** — demande du développeur en cours d'Itération 2, hors périmètre (passation et plan initial ne couvraient que du mobile). Une maquette cliquable existe déjà : `maquettes/dashboard-desktop.html` (grille 3 colonnes ≥1024px, bascule en 1 colonne en dessous, mêmes tokens de charte). Reste à trancher avec les cadreurs : priorité de cette itération par rapport au reste de la liste, et si le découpage en 3 colonnes par statut convient (choix du sous-agent `maquettiste`, pas une spécification validée). Implémentation (media queries dans `page.module.css`) non codée — pas d'ambiguïté de fichiers avec le reste de la liste, se glisse à n'importe quel rang une fois priorisée.

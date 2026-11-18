@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L'BURN – Back-office suivi ACTIV' (maquette desktop)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Libre+Franklin:wght@100..900&display=swap');
+
+  :root {
+    /* Mêmes tokens que maquettes/dashboard-fiche-profil.html (docs/contexte-lburn-docs/10-charte-graphique.md) */
+    --lb-color-primary:   #dc3129;
+    --lb-color-secondary: #ffb4aa;
+    --lb-color-pink-soft: #fee3e2;
+    --lb-color-cream:     #fff8f4;
+    --lb-color-text:      #23262f;
+    --lb-color-bg:        #f9f9f9;
+    --lb-color-white:     #ffffff;
+    --lb-shadow-card:     6px 6px 18px 0 rgba(0,0,0,0.3);
+    --lb-font-heading: 'Archivo Black', sans-serif;
+    --lb-font-body:    'Libre Franklin', Helvetica, Arial, sans-serif;
+    --lb-radius-button: 50px;
+    --lb-radius-card:   15px;
+
+    --lb-color-muted: #585c66;
+    --lb-color-border: #e4e1df;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--lb-font-body);
+    font-weight: 500;
+    font-size: 16px;
+    background: var(--lb-color-bg);
+    color: var(--lb-color-text);
+    min-height: 100vh;
+  }
+
+  /* ── TOPBAR : même traitement que la version mobile, pleine largeur ── */
+  .topbar {
+    background: var(--lb-color-text);
+    color: var(--lb-color-white);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .topbar-logo {
+    font-family: var(--lb-font-heading);
+    font-size: 20px;
+    color: var(--lb-color-white);
+    letter-spacing: 0.02em;
+  }
+  .topbar-logo span { color: var(--lb-color-secondary); }
+  .topbar-title {
+    font-family: var(--lb-font-heading);
+    font-size: 15px;
+    color: var(--lb-color-white);
+    flex: 1;
+  }
+
+  /* ── CONTENT : largeur contrainte, centrée ── */
+  .desktop-shell {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 32px 80px;
+  }
+
+  /* ── Bandeau outils : import + filtres + recherche sur une seule ligne ── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .import-banner {
+    background: var(--lb-color-pink-soft);
+    border-radius: var(--lb-radius-card);
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .import-banner-icon { font-size: 20px; }
+  .import-banner-text { white-space: nowrap; }
+  .import-banner-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--lb-color-text);
+  }
+  .import-banner-sub {
+    font-size: 12px;
+    color: var(--lb-color-muted);
+    margin-top: 1px;
+  }
+
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .filter-label {
+    font-size: 13px;
+    color: var(--lb-color-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+  }
+  .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    padding: 6px 14px;
+    border-radius: var(--lb-radius-button);
+    border: 1.5px solid var(--lb-color-text);
+    font-size: 13px;
+    font-family: var(--lb-font-body);
+    font-weight: 600;
+    background: var(--lb-color-white);
+    color: var(--lb-color-text);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .chip.active-chip { background: var(--lb-color-text); color: var(--lb-color-white); }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--lb-color-text);
+    border-radius: var(--lb-radius-button);
+    padding: 9px 16px;
+    gap: 8px;
+    background: var(--lb-color-white);
+    flex: 1;
+    min-width: 220px;
+    max-width: 360px;
+    margin-left: auto;
+  }
+  .search-bar input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: var(--lb-font-body);
+    font-size: 15px;
+    color: var(--lb-color-text);
+    background: transparent;
+  }
+  .search-bar .search-icon { color: var(--lb-color-muted); font-size: 16px; }
+
+  /* ── GRILLE 3 COLONNES : une section par colonne, côte à côte ≥1024px ── */
+  .sections-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 1023px) {
+    .sections-grid { grid-template-columns: 1fr; }
+    .search-bar { max-width: none; margin-left: 0; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+  }
+
+  .section-col {
+    background: var(--lb-color-white);
+    border: 1.5px solid var(--lb-color-border);
+    border-radius: var(--lb-radius-card);
+    padding: 18px 16px;
+  }
+
+  .section-header {
+    font-family: var(--lb-font-heading);
+    font-size: 13px;
+    color: var(--lb-color-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-header::after { content: ""; flex: 1; height: 1px; background: var(--lb-color-border); }
+  .section-count { font-size: 12px; color: var(--lb-color-muted); font-family: var(--lb-font-body); }
+
+  /* ── PROFILE ROW : identique à la version mobile ── */
+  .profile-list { display: flex; flex-direction: column; gap: 6px; }
+  .profile-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--lb-radius-card);
+    cursor: pointer;
+    transition: background 0.12s;
+    border: 1.5px solid var(--lb-color-border);
+    background: var(--lb-color-white);
+  }
+  .profile-row:hover { background: var(--lb-color-pink-soft); }
+
+  .avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--lb-font-heading);
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+  .avatar.burnette { background: var(--lb-color-secondary); color: var(--lb-color-text); }
+  .avatar.activ { background: var(--lb-color-primary); color: var(--lb-color-white); }
+  .avatar.pairaidante { background: var(--lb-color-text); color: var(--lb-color-white); }
+
+  .profile-info { flex: 1; min-width: 0; }
+  .profile-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--lb-color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .profile-meta {
+    font-size: 12px;
+    color: var(--lb-color-muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .profile-progression { display: flex; align-items: center; gap: 3px; margin-top: 5px; }
+  .prog-step {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    border: 1.5px solid var(--lb-color-border);
+    color: var(--lb-color-muted);
+    background: var(--lb-color-white);
+    flex-shrink: 0;
+  }
+  .prog-step.done { background: var(--lb-color-text); border-color: var(--lb-color-text); }
+  .prog-step.current { background: var(--lb-color-primary); border-color: var(--lb-color-primary); }
+  .prog-arrow { font-size: 9px; color: var(--lb-color-muted); flex-shrink: 0; }
+
+  .profile-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+  .badge-statut {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: var(--lb-radius-button);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .badge-statut.burnette { background: var(--lb-color-pink-soft); color: var(--lb-color-text); }
+  .badge-statut.activ { background: var(--lb-color-white); color: var(--lb-color-primary); border: 1.5px solid var(--lb-color-primary); }
+  .badge-statut.pairaidante { background: var(--lb-color-text); color: var(--lb-color-white); }
+
+  .chevron { color: var(--lb-color-muted); font-size: 14px; }
+
+  /* note de maquette (hors charte) */
+  .maquette-note {
+    font-size: 12px;
+    color: var(--lb-color-muted);
+    margin: -16px 0 24px;
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <span class="topbar-logo">L'<span>BURN</span></span>
+    <span class="topbar-title">Back-office · Suivi des parcours — vue desktop</span>
+  </div>
+
+  <div class="desktop-shell">
+
+    <p class="maquette-note">Maquette desktop (≥1024px) de l'écran « Dashboard – liste des profils ». Réduisez la fenêtre sous 1024px pour voir les 3 colonnes repasser en empilement, comme sur mobile.</p>
+
+    <!-- Bandeau outils : import + filtres + recherche sur une seule ligne -->
+    <div class="toolbar">
+      <div class="import-banner">
+        <span class="import-banner-icon">📂</span>
+        <div class="import-banner-text">
+          <div class="import-banner-title">Importer un fichier Excel</div>
+          <div class="import-banner-sub">Mettre à jour les profils depuis le fichier de suivi</div>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <span class="filter-label">▸ Filtre</span>
+        <div class="filter-chips">
+          <button class="chip active-chip">Toutes</button>
+          <button class="chip">BURN'ette</button>
+          <button class="chip">ACTIV'</button>
+          <button class="chip">Pair-aidante</button>
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Rechercher un prénom, une antenne…" readonly>
+      </div>
+    </div>
+
+    <!-- Grille 3 colonnes : une section par colonne, côte à côte -->
+    <div class="sections-grid">
+
+      <!-- Colonne BURN'ettes -->
+      <div class="section-col">
+        <p class="section-header">BURN'ettes <span class="section-count">10</span></p>
+        <div class="profile-list">
+          <div class="profile-row">
+            <div class="avatar burnette">SL</div>
+            <div class="profile-info">
+              <div class="profile-name">Sophie Lefebvre</div>
+              <div class="profile-meta">Antenne Talence · Module 3 BBA</div>
+              <div class="profile-progression">
+                <div class="prog-step done" title="BURN'ette">🔥</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step current" title="ACTIV'">⚡</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step" title="Pair-aidante">🤝</div>
+              </div>
+            </div>
+            <div class="profile-right">
+              <span class="badge-statut burnette">BURN'ette</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="profile-row">
+            <div class="avatar burnette">MC</div>
+            <div class="profile-info">
+              <div class="profile-name">Marie Courtin</div>
+              <div class="profile-meta">Antenne Lille · Module 2 BBA</div>
+              <div class="profile-progression">
+                <div class="prog-step current" title="BURN'ette">🔥</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step" title="ACTIV'">⚡</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step" title="Pair-aidante">🤝</div>
+              </div>
+            </div>
+            <div class="profile-right">
+              <span class="badge-statut burnette">BURN'ette</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="profile-row">
+            <div class="avatar burnette">AV</div>
+            <div class="profile-info">
+              <div class="profile-name">Amandine Vidal</div>
+              <div class="profile-meta">Antenne Agen · Module 4 BIB</div>
+              <div class="profile-progression">
+                <div class="prog-step done" title="BURN'ette">🔥</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step current" title="ACTIV'">⚡</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step" title="Pair-aidante">🤝</div>
+              </div>
+            </div>
+            <div class="profile-right">
+              <span class="badge-statut burnette">BURN'ette</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Colonne ACTIV' -->
+      <div class="section-col">
+        <p class="section-header">ACTIV' <span class="section-count">10</span></p>
+        <div class="profile-list">
+          <div class="profile-row">
+            <div class="avatar activ">NB</div>
+            <div class="profile-info">
+              <div class="profile-name">Nathalie Breton</div>
+              <div class="profile-meta">Antenne Talence · Tronc commun ✓</div>
+              <div class="profile-progression">
+                <div class="prog-step done" title="BURN'ette">🔥</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step current" title="ACTIV'">⚡</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step" title="Pair-aidante">🤝</div>
+              </div>
+            </div>
+            <div class="profile-right">
+              <span class="badge-statut activ">ACTIV'</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="profile-row">
+            <div class="avatar activ">CR</div>
+            <div class="profile-info">
+              <div class="profile-name">Céline Rousseau</div>
+              <div class="profile-meta">Antenne Lille · Formation modération ✓</div>
+              <div class="profile-progression">
+                <div class="prog-step done" title="BURN'ette">🔥</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step current" title="ACTIV'">⚡</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step" title="Pair-aidante">🤝</div>
+              </div>
+            </div>
+            <div class="profile-right">
+              <span class="badge-statut activ">ACTIV'</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="profile-row">
+            <div class="avatar activ">ID</div>
+            <div class="profile-info">
+              <div class="profile-name">Isabelle Dupont</div>
+              <div class="profile-meta">Antenne Mimizan · En formation</div>
+              <div class="profile-progression">
+                <div class="prog-step done" title="BURN'ette">🔥</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step current" title="ACTIV'">⚡</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step" title="Pair-aidante">🤝</div>
+              </div>
+            </div>
+            <div class="profile-right">
+              <span class="badge-statut activ">ACTIV'</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Colonne Pair-aidantes -->
+      <div class="section-col">
+        <p class="section-header">Pair-aidantes <span class="section-count">10</span></p>
+        <div class="profile-list">
+          <div class="profile-row">
+            <div class="avatar pairaidante">KM</div>
+            <div class="profile-info">
+              <div class="profile-name">Karima Mansouri</div>
+              <div class="profile-meta">Antenne Talence · Habilitation active</div>
+              <div class="profile-progression">
+                <div class="prog-step done" title="BURN'ette">🔥</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step done" title="ACTIV'">⚡</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step current" title="Pair-aidante">🤝</div>
+              </div>
+            </div>
+            <div class="profile-right">
+              <span class="badge-statut pairaidante">Pair-aidante</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="profile-row">
+            <div class="avatar pairaidante">FG</div>
+            <div class="profile-info">
+              <div class="profile-name">Florence Genet</div>
+              <div class="profile-meta">Antenne Lille · Supervision en cours</div>
+              <div class="profile-progression">
+                <div class="prog-step done" title="BURN'ette">🔥</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step done" title="ACTIV'">⚡</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step current" title="Pair-aidante">🤝</div>
+              </div>
+            </div>
+            <div class="profile-right">
+              <span class="badge-statut pairaidante">Pair-aidante</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+          <div class="profile-row">
+            <div class="avatar pairaidante">LT</div>
+            <div class="profile-info">
+              <div class="profile-name">Lucie Tran</div>
+              <div class="profile-meta">Antenne Agen · Habilitation active</div>
+              <div class="profile-progression">
+                <div class="prog-step done" title="BURN'ette">🔥</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step done" title="ACTIV'">⚡</div>
+                <span class="prog-arrow">→</span>
+                <div class="prog-step current" title="Pair-aidante">🤝</div>
+              </div>
+            </div>
+            <div class="profile-right">
+              <span class="badge-statut pairaidante">Pair-aidante</span>
+            </div>
+            <span class="chevron">›</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /sections-grid -->
+
+  </div><!-- /desktop-shell -->
+
+<script>
+  // Chips filtre (cosmétique, comme la version mobile)
+  document.querySelectorAll('.chip').forEach(function(chip) {
+    chip.addEventListener('click', function() {
+      chip.closest('.filter-chips').querySelectorAll('.chip').forEach(function(c){ c.classList.remove('active-chip'); });
+      chip.classList.add('active-chip');
+    });
+  });
+</script>
+</body>
+</html>

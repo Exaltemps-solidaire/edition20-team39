@@ -1,4 +1,5 @@
 /* Charte graphique L'BURN (docs/contexte-lburn-docs/10-charte-graphique.md) */
+/* --lb-font-heading / --lb-font-body sont posées par next/font/google dans layout.tsx, pas ici. */
 :global(:root) {
   --lb-color-primary: #dc3129;
   --lb-color-secondary: #ffb4aa;
@@ -6,15 +7,15 @@
   --lb-color-text: #23262f;
   --lb-color-bg: #f9f9f9;
   --lb-color-white: #ffffff;
-  --lb-font-heading: "Archivo Black", Arial, sans-serif;
-  --lb-font-body: "Libre Franklin", Helvetica, Arial, sans-serif;
+  --lb-color-muted: #585c66;
+  --lb-color-border: #e4e1df;
   --lb-radius-button: 50px;
   --lb-radius-card: 15px;
 }
 
 .phoneShell {
   width: 100%;
-  max-width: 480px;
+  max-width: 430px;
   margin: 0 auto;
   min-height: 100vh;
   background: var(--lb-color-white);
@@ -25,15 +26,17 @@
 .topbar {
   background: var(--lb-color-text);
   color: var(--lb-color-white);
-  padding: 16px 20px;
+  padding: 16px 20px 14px;
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .topbarLogo {
   font-family: var(--lb-font-heading);
   font-size: 18px;
+  letter-spacing: 0.02em;
 }
 
 .topbarLogo span {
@@ -41,10 +44,13 @@
 }
 
 .topbarTitle {
-  font-size: 14px;
+  font-family: var(--lb-font-heading);
+  font-size: 15px;
+  flex: 1;
 }
 
 .content {
+  flex: 1;
   padding: 20px 16px 40px;
 }
 
@@ -58,9 +64,11 @@
 
 .filterLabel {
   font-size: 13px;
+  color: var(--lb-color-muted);
   font-weight: 600;
   text-transform: uppercase;
-  color: var(--lb-color-text);
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
 }
 
 .filterChips {
@@ -74,7 +82,10 @@
   border-radius: var(--lb-radius-button);
   border: 1.5px solid var(--lb-color-text);
   font-size: 13px;
-  font-weight: 500;
+  font-family: var(--lb-font-body);
+  font-weight: 600;
+  background: var(--lb-color-white);
+  color: var(--lb-color-text);
 }
 
 .activeChip {
@@ -83,38 +94,55 @@
 }
 
 .searchBar {
+  display: flex;
+  align-items: center;
   border: 1.5px solid var(--lb-color-text);
   border-radius: var(--lb-radius-button);
   padding: 10px 16px;
-  margin-bottom: 24px;
+  gap: 8px;
+  margin-bottom: 20px;
+  background: var(--lb-color-white);
 }
 
 .searchBar input {
-  width: 100%;
+  flex: 1;
   border: none;
   outline: none;
+  font-family: var(--lb-font-body);
   font-size: 15px;
+  color: var(--lb-color-text);
   background: transparent;
 }
 
 .sectionHeader {
   font-family: var(--lb-font-heading);
   font-size: 13px;
-  color: var(--lb-color-text);
+  color: var(--lb-color-muted);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sectionHeader::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--lb-color-border);
 }
 
 .compteur {
-  color: var(--lb-color-primary);
+  font-size: 12px;
+  color: var(--lb-color-muted);
   font-family: var(--lb-font-body);
 }
 
 .profileList {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   margin-bottom: 24px;
 }
 
@@ -122,9 +150,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 10px;
+  padding: 12px 14px;
   border-radius: var(--lb-radius-card);
-  background: var(--lb-color-bg);
+  border: 1.5px solid var(--lb-color-border);
+  background: var(--lb-color-white);
 }
 
 .avatar {
@@ -135,44 +164,52 @@
   align-items: center;
   justify-content: center;
   font-family: var(--lb-font-heading);
-  font-size: 14px;
-  color: var(--lb-color-white);
+  font-size: 15px;
   flex-shrink: 0;
 }
 
 .avatar.burnette {
   background: var(--lb-color-secondary);
+  color: var(--lb-color-text);
 }
 
 .avatar.activ {
   background: var(--lb-color-primary);
+  color: var(--lb-color-white);
 }
 
 .avatar.pairaidante {
   background: var(--lb-color-text);
+  color: var(--lb-color-white);
 }
 
 .profileInfo {
   flex: 1;
+  min-width: 0;
 }
 
 .profileName {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 15px;
+  color: var(--lb-color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .profileMeta {
   font-size: 12px;
-  color: var(--lb-color-text);
-  opacity: 0.7;
+  color: var(--lb-color-muted);
+  margin-top: 2px;
 }
 
 .badgeStatut {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 3px 10px;
   border-radius: var(--lb-radius-button);
   text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .badgeStatut.burnette {
@@ -180,9 +217,11 @@
   color: var(--lb-color-text);
 }
 
+/* Rouge en texte -> fond blanc obligatoire (rouge sur rose/crème échoue l'AA) */
 .badgeStatut.activ {
-  background: var(--lb-color-primary);
-  color: var(--lb-color-white);
+  background: var(--lb-color-white);
+  color: var(--lb-color-primary);
+  border: 1.5px solid var(--lb-color-primary);
 }
 
 .badgeStatut.pairaidante {
