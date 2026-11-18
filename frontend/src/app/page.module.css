@@ -260,3 +260,54 @@
   padding: 20px 0;
   text-align: center;
 }
+
+/* ── Desktop (≥1024px) : repris de maquettes/dashboard-desktop.html ── */
+/* Sous 1024px, aucune règle ci-dessus n'est touchée : rendu mobile inchangé. */
+@media (min-width: 1024px) {
+  .phoneShell {
+    max-width: 1280px;
+  }
+
+  .content {
+    padding: 28px 32px 80px;
+  }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: nowrap;
+  }
+
+  .filterBar {
+    margin-bottom: 0;
+    flex-wrap: nowrap;
+  }
+
+  .searchBar {
+    flex: 1;
+    min-width: 220px;
+    max-width: 360px;
+    margin-left: auto;
+    margin-bottom: 0;
+  }
+
+  .sectionsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* Repli : une seule section affichée (filtre actif) prend toute la largeur */
+  .sectionsGrid > section:only-child {
+    grid-column: 1 / -1;
+  }
+
+  .sectionsGrid > section {
+    background: var(--lb-color-white);
+    border: 1.5px solid var(--lb-color-border);
+    border-radius: var(--lb-radius-card);
+    padding: 18px 16px;
+  }
+}

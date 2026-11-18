@@ -315,3 +315,45 @@
   border-color: #2ecc71;
   color: #1a9e53;
 }
+
+/* ── CTA VALIDER : fond rouge plein, texte blanc (conforme AA) ── */
+.ctaBar {
+  padding: 16px 20px 20px;
+  background: var(--lb-color-white);
+  border-top: 1px solid var(--lb-color-border);
+  flex-shrink: 0;
+}
+
+.btnValider {
+  display: block;
+  width: 100%;
+  background: var(--lb-color-primary);
+  color: var(--lb-color-white);
+  font-family: var(--lb-font-heading);
+  font-size: 15px;
+  padding: 16px;
+  border: none;
+  border-radius: var(--lb-radius-button);
+  cursor: pointer;
+  text-align: center;
+}
+
+.btnValider:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--lb-color-text);
+  color: var(--lb-color-white);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: var(--lb-radius-button);
+  white-space: nowrap;
+  z-index: 999;
+}

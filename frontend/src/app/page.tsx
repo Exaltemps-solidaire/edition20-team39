@@ -117,36 +117,38 @@ export default function Dashboard() {
       </div>
 
       <div className={styles.content}>
-        <div className={styles.filterBar}>
-          <span className={styles.filterLabel}>Filtre</span>
-          <div className={styles.filterChips}>
-            <button
-              type="button"
-              className={`${styles.chip} ${sectionActive === "toutes" ? styles.activeChip : ""}`}
-              onClick={() => setSectionActive("toutes")}
-            >
-              Toutes
-            </button>
-            {SECTIONS.map((section) => (
+        <div className={styles.toolbar}>
+          <div className={styles.filterBar}>
+            <span className={styles.filterLabel}>Filtre</span>
+            <div className={styles.filterChips}>
               <button
-                key={section}
                 type="button"
-                className={`${styles.chip} ${sectionActive === section ? styles.activeChip : ""}`}
-                onClick={() => setSectionActive(section)}
+                className={`${styles.chip} ${sectionActive === "toutes" ? styles.activeChip : ""}`}
+                onClick={() => setSectionActive("toutes")}
               >
-                {LIBELLES_SINGULIER[section]}
+                Toutes
               </button>
-            ))}
+              {SECTIONS.map((section) => (
+                <button
+                  key={section}
+                  type="button"
+                  className={`${styles.chip} ${sectionActive === section ? styles.activeChip : ""}`}
+                  onClick={() => setSectionActive(section)}
+                >
+                  {LIBELLES_SINGULIER[section]}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className={styles.searchBar}>
-          <input
-            type="text"
-            placeholder="Rechercher un prénom, une antenne…"
-            value={recherche}
-            onChange={(evenement) => setRecherche(evenement.target.value)}
-          />
+          <div className={styles.searchBar}>
+            <input
+              type="text"
+              placeholder="Rechercher un prénom, une antenne…"
+              value={recherche}
+              onChange={(evenement) => setRecherche(evenement.target.value)}
+            />
+          </div>
         </div>
 
         {chargement && <p className={styles.etatChargement}>Chargement des profils…</p>}
@@ -155,16 +157,18 @@ export default function Dashboard() {
             Impossible de charger les profils depuis l&apos;API. Réessaie dans un instant.
           </p>
         )}
-        {!chargement &&
-          !erreur &&
-          sectionsAffichees.map((section) => (
-            <SectionProfils
-              key={section}
-              section={section}
-              profils={groupes[section]}
-              onFaireProgresser={faireProgresser}
-            />
-          ))}
+        {!chargement && !erreur && (
+          <div className={styles.sectionsGrid}>
+            {sectionsAffichees.map((section) => (
+              <SectionProfils
+                key={section}
+                section={section}
+                profils={groupes[section]}
+                onFaireProgresser={faireProgresser}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

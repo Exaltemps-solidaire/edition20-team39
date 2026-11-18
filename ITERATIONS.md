@@ -216,13 +216,48 @@ Question du développeur après le correctif : « toujours pas de page profil, c
 
 ---
 
+## Itération 9 : fiche profil connectée aux vraies données + édition depuis la fiche
+
+**Plan proposé par l'agent le 2026-11-18, exécuté à la demande du développeur** (« continue » sur la reconnexion de la fiche profil, item 1 de l'ancienne liste « À venir »).
+
+- **Dans le périmètre** : `/profil/[id]` passe d'un Server Component statique à un Server Component minimal (garde `generateStaticParams`) qui délègue à un Client Component (`FicheProfilClient.tsx`, séparation nécessaire — Next.js interdit `"use client"` + `generateStaticParams` dans le même fichier). Le client fetche `GET /api/v1/profils`, trouve le profil par id, calcule l'étape réelle (réutilise `sectionAffichee` de `lib/profils.ts`, pas de duplication de logique). Formations/ateliers/disponibilités restent simulées (`profilDetail.ts`, pas en base). Ajout du CTA « Je valide le nouveau statut et l'habilitation » (masqué si déjà pair-aidante), qui appelle `PATCH /api/v1/profils/:id/statut` et rafraîchit — referme le scénario exact du PRD (clic fiche → CTA → statut mis à jour → reclassé dans le dashboard), au lieu du seul raccourci du bouton dashboard de l'Itération 5.
+- **Hors périmètre, toujours** : sous-progression interne, ajout/modification de formation, import Excel, filtre par antenne.
+- **Critères d'acceptation** :
+  - Étant donné un profil réellement BURN'ette en base, quand on ouvre sa fiche, alors le nom/antenne/étape affichés viennent de l'API, pas des données simulées figées de l'Itération 4.
+  - Étant donné la fiche d'un profil non pair-aidante, quand on clique « Je valide le nouveau statut… », alors le statut avance en base (vérifié via l'API) et un message de confirmation s'affiche.
+  - Étant donné les 9 tests existants, quand on les rejoue, alors ils passent toujours.
+- **Bilan** :
+  - Les 3 critères sont satisfaits : vérifié par lecture de code + `curl` sur l'API (statut de Marie Courtin passé à ACTIV' lors d'un test manuel, toujours persistant) ; 9/9 tests ; build génère toujours les 6 fiches statiques.
+  - Piège Next.js rencontré et corrigé : `"use client"` et `export function generateStaticParams()` ne peuvent pas coexister dans le même fichier (erreur de build explicite) — séparé en `page.tsx` (serveur, statique) + `FicheProfilClient.tsx` (client, logique réelle).
+  - **Modifications** : `frontend/src/app/profil/[id]/page.tsx` (réduit à un simple relais serveur), `frontend/src/app/profil/[id]/FicheProfilClient.tsx` (créé, logique complète), `frontend/src/app/profil/[id]/page.module.css` (ajout `.ctaBar`/`.btnValider`/`.toast`), `frontend/src/lib/profilDetail.ts` (export de `construireProgression`, réutilisée).
+
+---
+
+## Itération 10 : version desktop responsive du dashboard
+
+**Demande initiale du développeur en cours d'Itération 2 (⚠️ item « À venir » priorisé et implémenté à la demande du développeur), construite en parallèle de l'Itération 9 par un sous-agent en worktree isolé.**
+
+- **Dans le périmètre** : à partir de 1024px, les 3 sections s'affichent en grille 3 colonnes (repris de `maquettes/dashboard-desktop.html`), la barre de filtre/recherche tient sur une ligne, le conteneur s'élargit à 1280px. En dessous de 1024px : rendu mobile strictement inchangé (toutes les nouvelles règles sont dans un unique bloc `@media (min-width: 1024px)`).
+- **Critères d'acceptation** :
+  - Étant donné une fenêtre ≥1024px, quand le dashboard se charge, alors les 3 sections apparaissent côte à côte en grille.
+  - Étant donné une fenêtre <1024px, quand on compare au rendu d'avant cette itération, alors rien n'a changé visuellement.
+  - Étant donné les tests existants, quand on les rejoue, alors ils passent toujours.
+- **Bilan** :
+  - Les 3 critères sont satisfaits : media query confirmée dans le CSS compilé, 9/9 tests, non-régression mobile garantie par construction (aucune règle existante modifiée, uniquement un bloc ajouté en fin de fichier).
+  - Écart signalé par le sous-agent et accepté : le balisage du dashboard (`page.tsx`) n'avait pas de conteneur pour grouper la barre d'outils et la grille des sections — deux `<div>` d'enveloppe ajoutés, sans règle CSS hors media query (neutres en mobile).
+  - **Modifications** : `frontend/src/app/page.tsx` (deux `<div>` d'enveloppe), `frontend/src/app/page.module.css` (bloc `@media (min-width: 1024px)` en fin de fichier).
+
+---
+
 ## À venir (liste ordonnée, à détailler au fil de l'eau)
 
 > Référence visuelle à jour : `maquettes/dashboard-fiche-profil.html` (commit `52c9ec6`, produit en parallèle de l'Itération 1), qui reprend la vraie palette du site L'BURN (contraste AA) au lieu de celle inventée par `passation/prototype/index.html`. Les tokens de couleur utilisés dans `frontend/src/app/page.module.css` sont déjà alignés dessus (mêmes valeurs `--lb-color-*`, mêmes couleurs par section). À comparer avant de coder l'écran suivant.
 
-1. La fiche profil (`/profil/[id]`) reste en lecture seule avec des données **simulées**, déconnectées des vraies données Postgres de l'Itération 5 (le statut réel peut diverger de ce qu'affiche la fiche). Édition du statut et des formations **depuis la fiche** (scénario exact du PRD : clic sur l'étape de progression + CTA « Je valide… ») non fait — le raccourci actuel est le bouton « statut suivant » sur le dashboard, qui couvre l'hypothèse testée (0 outil externe) mais pas le parcours exact dessiné.
-2. Sous-progression interne par statut (candidature en cours/validée pour ACTIV' ; formation/habilitation/supervision pour Pair-aidante) — proposition graphique à faire avant de coder (cf. `adr.md`).
-3. Ajout / modification d'une formation sur la fiche profil (bouton « + Ajouter » de la maquette, pas encore fonctionnel).
-4. Import Excel avec correspondance manuelle des colonnes (pas de mapping automatique — colonnes réelles inconnues, cf. `docs/analyse-maquette-donnees-asso.md` §6).
-5. Filtrage du dashboard par antenne pour la directrice d'antenne — reporté, non géré aujourd'hui (référentiel d'antenne pas encore tranché, cf. §4 et §7 de l'analyse).
-6. ⚠️ **Version desktop responsive du dashboard** — demande du développeur en cours d'Itération 2, hors périmètre (passation et plan initial ne couvraient que du mobile). Une maquette cliquable existe déjà : `maquettes/dashboard-desktop.html` (grille 3 colonnes ≥1024px, bascule en 1 colonne en dessous, mêmes tokens de charte). Reste à trancher avec les cadreurs : priorité de cette itération par rapport au reste de la liste. Implémentation (media queries dans `page.module.css`) non codée.
+**Ce qui reste pour que le back-office soit vraiment « gérable » » (retour du développeur, 2026-11-18)** : l'édition se limite aujourd'hui à faire avancer un statut d'un cran (bouton dashboard + CTA fiche). Tout le reste de la fiche est en lecture seule — rien d'autre n'est éditable pour l'instant :
+
+1. **Ajout / modification d'une formation sur la fiche profil** — bouton « + Ajouter » de la maquette non fonctionnel ; aucune table `formations` en base (les formations affichées restent les données simulées de `profilDetail.ts`, indépendantes par profil). Nécessite un nouveau modèle de données (table liée `formations` ou `ateliers`, clé étrangère vers `profils`) + endpoints CRUD + formulaire. La plus grosse brique de gestion restante.
+2. **Sous-progression interne par statut** (candidature en cours/validée pour ACTIV' ; formation/habilitation/supervision pour Pair-aidante) — décision volontairement reportée (cf. `adr.md`, Itération 5) pour livrer une persistance simple vite ; dépend du point 1 si on veut que la sous-progression découle des formations réellement enregistrées.
+3. **Édition du nom / de l'antenne d'un profil** — jamais demandée explicitement dans le PRD retenu (scénario = éditer le *statut*, pas l'identité), mais absente si la directrice d'antenne en a besoin : à clarifier avec les cadreurs (❓).
+4. **Import Excel** avec correspondance manuelle des colonnes (pas de mapping automatique — colonnes réelles inconnues, cf. `docs/analyse-maquette-donnees-asso.md` §6). Seule vraie voie d'entrée en masse des profils pour l'instant : les 6 profils actuels sont un seed fixe, pas un import réel.
+5. **Filtrage du dashboard par antenne** pour la directrice d'antenne — reporté, référentiel d'antenne pas encore tranché (cf. §4 et §7 de l'analyse).
+6. Sélecteur de rôle (Itération 6) encore **purement déclaratif** : choisir « Directrice d'antenne » ne restreint rien aujourd'hui (pas de filtrage par antenne, pas de droits différents) — cohérent avec le PRD (pas de vraie authentification), mais à garder en tête si la démo doit montrer une différence de comportement entre les deux rôles.

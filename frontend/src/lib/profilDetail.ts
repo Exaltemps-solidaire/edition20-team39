@@ -38,7 +38,7 @@ export type ProfilDetail = {
   disponibilites: Disponibilite[];
 };
 
-function construireProgression(etapeActuelle: EtapeStatut): EtapeProgression[] {
+export function construireProgression(etapeActuelle: EtapeStatut): EtapeProgression[] {
   const etapes: { cle: EtapeStatut; icone: string; libelle: string }[] = [
     { cle: "burnette", icone: "🔥", libelle: "BURN'ette" },
     { cle: "activ", icone: "⚡", libelle: "ACTIV'" },
