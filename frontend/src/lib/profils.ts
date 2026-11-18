@@ -31,6 +31,14 @@ export function sectionAffichee(profil: Profil): Section {
   return "burnette";
 }
 
+const ORDRE: Section[] = ["burnette", "activ", "pairaidante"];
+
+// Étape suivante dans la progression cumulative, ou null si déjà au dernier palier.
+export function etapeSuivante(section: Section): Section | null {
+  const index = ORDRE.indexOf(section);
+  return index < ORDRE.length - 1 ? ORDRE[index + 1] : null;
+}
+
 export function regrouperParSection(profils: Profil[]): Record<Section, Profil[]> {
   const groupes: Record<Section, Profil[]> = { burnette: [], activ: [], pairaidante: [] };
   for (const profil of profils) {

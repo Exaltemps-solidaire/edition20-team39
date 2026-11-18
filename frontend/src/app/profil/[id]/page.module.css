@@ -357,3 +357,54 @@
   white-space: nowrap;
   z-index: 999;
 }
+
+/* ── Dialog de confirmation (élément <dialog> natif) ── */
+.dialogConfirmation {
+  border: none;
+  border-radius: var(--lb-radius-card);
+  padding: 20px;
+  max-width: 320px;
+  width: calc(100% - 40px);
+  font-family: var(--lb-font-body);
+  color: var(--lb-color-text);
+}
+
+.dialogConfirmation::backdrop {
+  background: rgba(35, 38, 47, 0.5);
+}
+
+.dialogTexte {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 18px;
+}
+
+.dialogActions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.dialogAnnuler {
+  font-family: var(--lb-font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lb-color-text);
+  background: var(--lb-color-white);
+  border: 1.5px solid var(--lb-color-border);
+  border-radius: var(--lb-radius-button);
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.dialogConfirmer {
+  font-family: var(--lb-font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--lb-color-white);
+  background: var(--lb-color-primary);
+  border: none;
+  border-radius: var(--lb-radius-button);
+  padding: 8px 16px;
+  cursor: pointer;
+}

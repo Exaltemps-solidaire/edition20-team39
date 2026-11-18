@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filtrerProfils, regrouperParSection, sectionAffichee, type Profil } from "./profils";
+import { etapeSuivante, filtrerProfils, regrouperParSection, sectionAffichee, type Profil } from "./profils";
 
 const profil = (partiel: Partial<Profil>): Profil => ({
   id: "x",
@@ -49,5 +49,16 @@ describe("filtrerProfils", () => {
   it("filtre par antenne et renvoie une liste vide sans résultat", () => {
     expect(filtrerProfils(profils, "talence")).toEqual([profils[1]]);
     expect(filtrerProfils(profils, "agen")).toHaveLength(0);
+  });
+});
+
+describe("etapeSuivante", () => {
+  it("avance d'une étape à la fois", () => {
+    expect(etapeSuivante("burnette")).toBe("activ");
+    expect(etapeSuivante("activ")).toBe("pairaidante");
+  });
+
+  it("retourne null une fois au dernier palier", () => {
+    expect(etapeSuivante("pairaidante")).toBeNull();
   });
 });

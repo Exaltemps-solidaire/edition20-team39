@@ -1,9 +1,9 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import styles from "./page.module.css";
-import { sectionAffichee, type Profil } from "../../../lib/profils";
+import { LIBELLES_SINGULIER, etapeSuivante, sectionAffichee, type Profil } from "../../../lib/profils";
 import {
   construireProgression,
   trouverProfilDetail,
@@ -106,6 +106,7 @@ export default function FicheProfilClient({ id }: { id: string }) {
   const [version, setVersion] = useState(0);
   const [enCoursValidation, setEnCoursValidation] = useState(false);
   const [confirmation, setConfirmation] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -131,6 +132,7 @@ export default function FicheProfilClient({ id }: { id: string }) {
   }, [id, version]);
 
   async function validerNouveauStatut() {
+    dialogRef.current?.close();
     setEnCoursValidation(true);
     try {
       await fetch(`/api/v1/profils/${id}/statut`, { method: "PATCH" });
@@ -168,6 +170,7 @@ export default function FicheProfilClient({ id }: { id: string }) {
   const progression = construireProgression(etapeActuelle);
   const detail = trouverProfilDetail(id);
   const depuis = detail?.depuis ?? `Membre de l'antenne ${profil.antenne}`;
+  const suivante = etapeSuivante(etapeActuelle);
 
   return (
     <div className={styles.phoneShell}>
@@ -213,12 +216,12 @@ export default function FicheProfilClient({ id }: { id: string }) {
         </div>
       </div>
 
-      {etapeActuelle !== "pairaidante" && (
+      {suivante && (
         <div className={styles.ctaBar}>
           <button
             type="button"
             className={styles.btnValider}
-            onClick={validerNouveauStatut}
+            onClick={() => dialogRef.current?.showModal()}
             disabled={enCoursValidation}
           >
             {enCoursValidation ? "Validation…" : "Je valide le nouveau statut et l'habilitation"}
@@ -226,6 +229,24 @@ export default function FicheProfilClient({ id }: { id: string }) {
         </div>
       )}
       {confirmation && <div className={styles.toast}>✓ Statut mis à jour — habilitation tracée !</div>}
+
+      {suivante && (
+        <dialog ref={dialogRef} className={styles.dialogConfirmation}>
+          <p className={styles.dialogTexte}>
+            Faire passer <strong>{profil.nom}</strong> de {LIBELLES_SINGULIER[etapeActuelle]} à{" "}
+            <strong>{LIBELLES_SINGULIER[suivante]}</strong> ? L&apos;habilitation sera tracée avec cette
+            date.
+          </p>
+          <div className={styles.dialogActions}>
+            <button type="button" className={styles.dialogAnnuler} onClick={() => dialogRef.current?.close()}>
+              Annuler
+            </button>
+            <button type="button" className={styles.dialogConfirmer} onClick={validerNouveauStatut}>
+              Confirmer
+            </button>
+          </div>
+        </dialog>
+      )}
     </div>
   );
 }

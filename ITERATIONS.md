@@ -249,15 +249,71 @@ Question du développeur après le correctif : « toujours pas de page profil, c
 
 ---
 
+## Itération 11 : édition du statut uniquement depuis la fiche, avec confirmation
+
+Retour du développeur le 2026-11-18 : « passage au statut suivant pas assez clair, j'ai cliqué sans trop comprendre » — le bouton direct sur le dashboard (Itération 5) permettait un clic accidentel sans contexte ni confirmation.
+
+- **Dans le périmètre** :
+  - Retrait du bouton « Statut suivant » du dashboard : l'édition se fait désormais **uniquement** depuis la fiche profil.
+  - Dialog de confirmation natif (`<dialog>`) avant de valider un changement de statut sur la fiche : affiche le nom, le statut actuel et le statut visé, boutons Annuler/Confirmer explicites.
+  - Fonction pure `etapeSuivante` extraite dans `lib/profils.ts` (réutilisable), pour masquer le CTA une fois pair-aidante et nommer l'étape suivante dans le dialog.
+- **Hors périmètre** (demandé par le développeur, proposé en itérations suivantes ci-dessous) : réversibilité (revenir en arrière), historique daté des changements, création manuelle de profils.
+- **Critères d'acceptation** :
+  - Étant donné le dashboard, quand on regarde une ligne de profil, alors il n'y a plus de bouton d'édition directe — seul le clic vers la fiche reste possible.
+  - Étant donné la fiche d'un profil non pair-aidante, quand on clique le CTA, alors un dialog de confirmation s'ouvre nommant le statut actuel et visé ; le statut n'est mis à jour qu'après un clic explicite sur « Confirmer ».
+  - Étant donné les tests existants + 2 nouveaux sur `etapeSuivante`, quand on les rejoue, alors ils passent (11/11).
+- **Bilan** :
+  - Les 3 critères sont satisfaits, vérifiés par lecture de code + déploiement (`curl` confirme l'absence du texte « Statut suivant » sur le dashboard en ligne).
+  - Rien bloqué par le harnais : 11/11 tests, contrat de déployabilité propre.
+  - **Modifications** :
+    - `frontend/src/lib/profils.ts`, `profils.test.ts` : fonction `etapeSuivante` + 2 tests.
+    - `frontend/src/app/page.tsx`, `page.module.css` : retrait du bouton et de son style.
+    - `frontend/src/app/profil/[id]/FicheProfilClient.tsx`, `page.module.css` : dialog de confirmation natif, CTA masqué en fin de parcours.
+
+---
+
+## Propositions pour la suite (gestion du back-office, demande du développeur du 2026-11-18)
+
+Constat du développeur : le back-office est affiché mais très peu « gérable » — en dehors de faire avancer un statut d'un cran, rien n'est éditable, pas de retour en arrière, pas d'historique, pas de création de profil hors seed fixe. Détail de ce qui est demandé et son découpage proposé, à valider avant codage (taille et dépendances à confirmer une fois le temps restant connu) :
+
+### Itération 12 (candidate) : statut réversible, choix direct de l'étape
+
+- Remplace l'auto-avancement unique (`PATCH .../statut`, toujours « +1 ») par un choix explicite de l'étape cible, dans les deux sens.
+- API : `PATCH /api/v1/profils/:id/statut` prend un corps `{ "etape": "burnette"|"activ"|"pairaidante" }` au lieu de n'avancer que d'un cran.
+- Fiche : les 3 étapes de la progression deviennent cliquables (pas seulement un CTA en bas) ; le dialog de confirmation (Itération 11) s'adapte au sens du changement (« faire reculer » vs « faire avancer »), avec un message plus appuyé si c'est un recul (❓ à valider avec les cadreurs : un recul de statut doit-il avoir un texte d'avertissement différent, par exemple sur la perte d'habilitation ?).
+- Pas de nouvelle table : réutilise `profils` existante.
+
+### Itération 13 (candidate) : historique daté des changements de statut
+
+- Dépend de l'Itération 12 (le point d'écriture de l'historique est le même endroit que le nouveau `PATCH`).
+- Nouvelle table `historique_statut` (profil_id, ancien_statut, nouveau_statut, date), remplie à chaque changement (y compris les reculs).
+- Nouvel endpoint `GET /api/v1/profils/:id/historique`.
+- Fiche : section « Historique » sous la progression du statut, liste chronologique datée (ex. « ACTIV' → Pair-aidante le 18/11/2026 à 18h22 »).
+- ❓ Qui peut voir l'historique (les deux rôles du sélecteur, ou seulement la chargée de remobilisation) — pas tranché par le PRD retenu, à clarifier si le sélecteur de rôle doit un jour restreindre l'affichage.
+
+### Itération 14 (candidate) : création manuelle d'un nouveau profil
+
+- Précision du développeur : « il manque aussi une création manuelle de nouveaux profils, hors Excel. Le Excel servirait pour une migration batch, mais l'app doit être autonome par ailleurs. » → priorité à la création manuelle, l'import Excel reste un besoin de migration initiale séparé, pas un chemin d'usage courant.
+- Nouvel endpoint `POST /api/v1/profils` : génère un id, insère en base avec statut initial BURN'ette (`estActiv`/`estPairAidante` à `false`).
+- Dashboard : bouton « + Nouveau profil » (import-banner de la maquette, aujourd'hui juste décoratif, pourrait porter cette action à la place de l'import Excel), formulaire minimal (nom, antenne).
+- Indépendante des Itérations 12-13 : peut être construite en parallèle (fichiers distincts côté frontend, même table `profils` mais pas les mêmes routes API).
+
+### Rappel : items déjà en liste, toujours en attente
+
+- Ajout/modification d'une formation sur la fiche (nécessite une nouvelle table liée, le plus gros morceau restant — cf. ci-dessous).
+- Sous-progression interne par statut (candidature en cours/validée, formation/habilitation/supervision) — distincte de la réversibilité de l'Itération 12 : celle-ci porte sur les 3 paliers cumulatifs existants, la sous-progression ajouterait des états plus fins à l'intérieur de chaque palier.
+- Import Excel — migration batch initiale uniquement, confirmé secondaire par le développeur.
+- Filtrage du dashboard par antenne.
+- Édition du nom/de l'antenne d'un profil (❓ jamais demandée explicitement dans le PRD retenu).
+
+---
+
 ## À venir (liste ordonnée, à détailler au fil de l'eau)
 
 > Référence visuelle à jour : `maquettes/dashboard-fiche-profil.html` (commit `52c9ec6`, produit en parallèle de l'Itération 1), qui reprend la vraie palette du site L'BURN (contraste AA) au lieu de celle inventée par `passation/prototype/index.html`. Les tokens de couleur utilisés dans `frontend/src/app/page.module.css` sont déjà alignés dessus (mêmes valeurs `--lb-color-*`, mêmes couleurs par section). À comparer avant de coder l'écran suivant.
 
-**Ce qui reste pour que le back-office soit vraiment « gérable » » (retour du développeur, 2026-11-18)** : l'édition se limite aujourd'hui à faire avancer un statut d'un cran (bouton dashboard + CTA fiche). Tout le reste de la fiche est en lecture seule — rien d'autre n'est éditable pour l'instant :
+**Ce qui reste pour que le back-office soit vraiment « gérable » » (retour du développeur, 2026-11-18)** — détaillé dans « Propositions pour la suite » ci-dessus (Itérations 12-14 candidates : réversibilité, historique, création manuelle de profil), plus :
 
-1. **Ajout / modification d'une formation sur la fiche profil** — bouton « + Ajouter » de la maquette non fonctionnel ; aucune table `formations` en base (les formations affichées restent les données simulées de `profilDetail.ts`, indépendantes par profil). Nécessite un nouveau modèle de données (table liée `formations` ou `ateliers`, clé étrangère vers `profils`) + endpoints CRUD + formulaire. La plus grosse brique de gestion restante.
-2. **Sous-progression interne par statut** (candidature en cours/validée pour ACTIV' ; formation/habilitation/supervision pour Pair-aidante) — décision volontairement reportée (cf. `adr.md`, Itération 5) pour livrer une persistance simple vite ; dépend du point 1 si on veut que la sous-progression découle des formations réellement enregistrées.
-3. **Édition du nom / de l'antenne d'un profil** — jamais demandée explicitement dans le PRD retenu (scénario = éditer le *statut*, pas l'identité), mais absente si la directrice d'antenne en a besoin : à clarifier avec les cadreurs (❓).
-4. **Import Excel** avec correspondance manuelle des colonnes (pas de mapping automatique — colonnes réelles inconnues, cf. `docs/analyse-maquette-donnees-asso.md` §6). Seule vraie voie d'entrée en masse des profils pour l'instant : les 6 profils actuels sont un seed fixe, pas un import réel.
-5. **Filtrage du dashboard par antenne** pour la directrice d'antenne — reporté, référentiel d'antenne pas encore tranché (cf. §4 et §7 de l'analyse).
-6. Sélecteur de rôle (Itération 6) encore **purement déclaratif** : choisir « Directrice d'antenne » ne restreint rien aujourd'hui (pas de filtrage par antenne, pas de droits différents) — cohérent avec le PRD (pas de vraie authentification), mais à garder en tête si la démo doit montrer une différence de comportement entre les deux rôles.
+1. **Ajout / modification d'une formation sur la fiche profil** — bouton « + Ajouter » de la maquette non fonctionnel ; aucune table `formations` en base. Nécessite un nouveau modèle de données (table liée, clé étrangère vers `profils`) + endpoints CRUD + formulaire. La plus grosse brique de gestion restante, pas encore détaillée en itération.
+2. **Filtrage du dashboard par antenne** pour la directrice d'antenne — reporté, référentiel d'antenne pas encore tranché (cf. §4 et §7 de l'analyse).
+3. Sélecteur de rôle (Itération 6) encore **purement déclaratif** : choisir « Directrice d'antenne » ne restreint rien aujourd'hui (pas de filtrage par antenne, pas de droits différents) — cohérent avec le PRD (pas de vraie authentification), mais à garder en tête si la démo doit montrer une différence de comportement entre les deux rôles.

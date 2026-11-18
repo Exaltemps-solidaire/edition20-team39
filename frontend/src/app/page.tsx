@@ -24,15 +24,7 @@ function initiales(nom: string): string {
     .toUpperCase();
 }
 
-function SectionProfils({
-  section,
-  profils,
-  onFaireProgresser,
-}: {
-  section: Section;
-  profils: Profil[];
-  onFaireProgresser: (id: string) => void;
-}) {
+function SectionProfils({ section, profils }: { section: Section; profils: Profil[] }) {
   return (
     <section>
       <p className={styles.sectionHeader}>
@@ -51,15 +43,6 @@ function SectionProfils({
             <span className={`${styles.badgeStatut} ${styles[section]}`}>
               {LIBELLES_SINGULIER[section]}
             </span>
-            {section !== "pairaidante" && (
-              <button
-                type="button"
-                className={styles.boutonProgresser}
-                onClick={() => onFaireProgresser(profil.id)}
-              >
-                Statut suivant
-              </button>
-            )}
           </div>
         ))}
       </div>
@@ -73,8 +56,6 @@ export default function Dashboard() {
   const [erreur, setErreur] = useState(false);
   const [recherche, setRecherche] = useState("");
   const [sectionActive, setSectionActive] = useState<FiltreSection>("toutes");
-
-  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     let ignore = false;
@@ -96,12 +77,7 @@ export default function Dashboard() {
     return () => {
       ignore = true;
     };
-  }, [version]);
-
-  async function faireProgresser(id: string) {
-    await fetch(`/api/v1/profils/${id}/statut`, { method: "PATCH" });
-    setVersion((valeurPrecedente) => valeurPrecedente + 1);
-  }
+  }, []);
 
   const groupes = regrouperParSection(filtrerProfils(profils, recherche));
   const sectionsAffichees = sectionActive === "toutes" ? SECTIONS : [sectionActive];
@@ -160,12 +136,7 @@ export default function Dashboard() {
         {!chargement && !erreur && (
           <div className={styles.sectionsGrid}>
             {sectionsAffichees.map((section) => (
-              <SectionProfils
-                key={section}
-                section={section}
-                profils={groupes[section]}
-                onFaireProgresser={faireProgresser}
-              />
+              <SectionProfils key={section} section={section} profils={groupes[section]} />
             ))}
           </div>
         )}
