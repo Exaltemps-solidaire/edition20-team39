@@ -124,7 +124,15 @@ Origine : retour du développeur après l'Itération 1 — l'écran en ligne « 
   - Étant donné l'URL `/profil/<id>` ouverte, quand la page se charge, alors le visuel reprend fidèlement `maquettes/dashboard-fiche-profil.html` (hero, progression du statut, formations, disponibilités) en lecture seule.
   - Étant donné les tests Vitest existants (Itération 1-3), quand on les rejoue, alors ils passent toujours (aucune régression, aucun fichier partagé modifié).
 - **Fichiers prévus** : `frontend/src/app/profil/[id]/page.tsx`, `frontend/src/app/profil/[id]/page.module.css`, `frontend/src/lib/profilDetail.ts` (données d'exemple locales, nouveau fichier).
-- **Bilan** : _à remplir une fois le sous-agent revenu et sa branche relue/fusionnée._
+- **Bilan** :
+  - Codée entièrement par le sous-agent en worktree isolé, pendant les ~8 minutes de l'Itération 3 côté session principale (aucun temps de codage supplémentaire côté orchestrateur, juste la revue + fusion : ~3 minutes).
+  - Les 2 critères d'acceptation sont satisfaits : visuel conforme à la maquette (hero, 3 étapes de progression, formations/ateliers groupés, disponibilités), vérifié en prod (`curl localhost:8080/profil/1` → contenu attendu) ; `npm test` toujours à 6/6 après fusion, aucun fichier partagé (`page.tsx`, `profils.ts`, `layout.tsx`, `globals.css`) touché par le sous-agent — confirmé par `git status` avant copie.
+  - Reporté, confirmé à la revue : seuls 3 profils d'exemple sur les 6 du dashboard ont une fiche détaillée (`profilDetail.ts` est indépendant de `profils.ts`, par choix explicite pour éviter tout conflit) — le lien cliquable dashboard → fiche (item 3 de « À venir ») casserait pour les 3 autres s'il était câblé maintenant ; volontairement non fait cette itération, à refaire après avoir aligné les deux jeux de données (Itération 5, cf. ci-dessous).
+  - Rien bloqué par le harnais : tests verts, contrat de déployabilité propre.
+  - **Modifications** :
+    - `frontend/src/lib/profilDetail.ts` (créé, sous-agent) : données d'exemple pour 3 profils (un par étape de statut), indépendant de `profils.ts`.
+    - `frontend/src/app/profil/[id]/page.tsx` (créé, sous-agent) : route App Router, Server Component, `generateStaticParams` pour l'export statique — sert le critère 1.
+    - `frontend/src/app/profil/[id]/page.module.css` (créé, sous-agent) : styles repris de la maquette, mêmes tokens de couleur que le dashboard — sert le critère 1.
 
 ---
 

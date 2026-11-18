@@ -1,0 +1,317 @@
+/* Charte graphique L'BURN (maquettes/dashboard-fiche-profil.html, #screen-2) */
+/* --lb-font-heading / --lb-font-body sont posées par next/font/google dans layout.tsx, pas ici. */
+:global(:root) {
+  --lb-color-primary: #dc3129;
+  --lb-color-secondary: #ffb4aa;
+  --lb-color-pink-soft: #fee3e2;
+  --lb-color-cream: #fff8f4;
+  --lb-color-text: #23262f;
+  --lb-color-bg: #f9f9f9;
+  --lb-color-white: #ffffff;
+  --lb-color-muted: #585c66;
+  --lb-color-border: #e4e1df;
+  --lb-radius-button: 50px;
+  --lb-radius-card: 15px;
+  --lb-shadow-card: 6px 6px 18px 0 rgba(0, 0, 0, 0.3);
+}
+
+.phoneShell {
+  width: 100%;
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--lb-color-white);
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  background: var(--lb-color-text);
+  color: var(--lb-color-white);
+  padding: 16px 20px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.topbarBack {
+  color: var(--lb-color-white);
+  font-size: 20px;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.topbarLogo {
+  font-family: var(--lb-font-heading);
+  font-size: 18px;
+  letter-spacing: 0.02em;
+}
+
+.topbarLogo span {
+  color: var(--lb-color-secondary);
+}
+
+.topbarTitle {
+  font-family: var(--lb-font-heading);
+  font-size: 15px;
+  flex: 1;
+}
+
+.introuvable {
+  padding: 32px 20px;
+  color: var(--lb-color-muted);
+  font-size: 14px;
+}
+
+/* ── Hero ── */
+.profilHero {
+  background: var(--lb-color-cream);
+  box-shadow: var(--lb-shadow-card);
+  padding: 24px 20px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.profilAvatarLg {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--lb-font-heading);
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.profilAvatarLg.burnette {
+  background: var(--lb-color-secondary);
+  color: var(--lb-color-text);
+}
+
+.profilAvatarLg.activ {
+  background: var(--lb-color-primary);
+  color: var(--lb-color-white);
+}
+
+.profilAvatarLg.pairaidante {
+  background: var(--lb-color-text);
+  color: var(--lb-color-white);
+}
+
+.profilNom {
+  font-family: var(--lb-font-heading);
+  font-size: 20px;
+  color: var(--lb-color-text);
+  line-height: 1.2;
+}
+
+.profilAntenne {
+  font-size: 13px;
+  color: var(--lb-color-muted);
+  margin-top: 4px;
+}
+
+.profilDepuis {
+  font-size: 12px;
+  color: var(--lb-color-muted);
+  margin-top: 2px;
+}
+
+.scrollArea {
+  flex: 1;
+  padding-bottom: 20px;
+}
+
+/* ── Progression du statut ── */
+.statutSection {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--lb-color-border);
+  flex-shrink: 0;
+}
+
+.statutSectionTitle {
+  font-family: var(--lb-font-heading);
+  font-size: 13px;
+  color: var(--lb-color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+
+.statutSteps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.statutStep {
+  flex: 1;
+  padding: 10px 6px;
+  border-radius: var(--lb-radius-card);
+  border: 1.5px solid var(--lb-color-border);
+  background: var(--lb-color-white);
+  text-align: center;
+}
+
+.stepIcon {
+  font-size: 20px;
+}
+
+.stepLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--lb-color-muted);
+  margin-top: 4px;
+  display: block;
+}
+
+.statutStep.fait {
+  border-color: var(--lb-color-text);
+  background: var(--lb-color-cream);
+}
+
+.statutStep.fait .stepLabel {
+  color: var(--lb-color-text);
+}
+
+/* Étape "actuelle" : texte rouge -> fond blanc explicite, conforme AA */
+.statutStep.actuelle {
+  border-color: var(--lb-color-primary);
+  background: var(--lb-color-white);
+}
+
+.statutStep.actuelle .stepLabel {
+  color: var(--lb-color-primary);
+}
+
+.statutArrow {
+  color: var(--lb-color-muted);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* ── Formations / Ateliers ── */
+.formationsSection {
+  padding: 16px 20px;
+  flex-shrink: 0;
+}
+
+.formationsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.formationsTitle {
+  font-family: var(--lb-font-heading);
+  font-size: 13px;
+  color: var(--lb-color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.formationGroupLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--lb-color-muted);
+  margin: 10px 0 6px;
+  padding-left: 2px;
+}
+
+.formationItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: var(--lb-radius-card);
+  background: var(--lb-color-cream);
+  border: 1px solid var(--lb-color-border);
+  margin-bottom: 8px;
+}
+
+.formationItemIcon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.formationItemInfo {
+  flex: 1;
+}
+
+.formationItemName {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--lb-color-text);
+}
+
+.formationItemDate {
+  font-size: 12px;
+  color: var(--lb-color-muted);
+  margin-top: 2px;
+}
+
+.formationItemCheck {
+  color: #2ecc71;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.formationItemPending {
+  font-size: 16px;
+  color: #ccc;
+  flex-shrink: 0;
+}
+
+/* Item "en cours" : date en rouge -> fond blanc explicite */
+.formationItem.enCours {
+  border: 1.5px dashed var(--lb-color-primary);
+  background: var(--lb-color-white);
+}
+
+.formationItemDate.dateRouge {
+  color: var(--lb-color-primary);
+  font-weight: 700;
+}
+
+/* ── Disponibilités : rose décoratif, texte foncé ── */
+.disposSection {
+  margin: 0 20px 16px;
+  padding: 12px 14px;
+  background: var(--lb-color-secondary);
+  border-radius: var(--lb-radius-card);
+  font-size: 13px;
+  color: var(--lb-color-text);
+}
+
+.disposTitle {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.disposGrid {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dispoSlot {
+  background: var(--lb-color-white);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--lb-color-text);
+  border: 1px solid var(--lb-color-border);
+}
+
+.dispoSlot.disponible {
+  border-color: #2ecc71;
+  color: #1a9e53;
+}
