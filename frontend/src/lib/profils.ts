@@ -39,6 +39,22 @@ export function regrouperParSection(profils: Profil[]): Record<Section, Profil[]
   return groupes;
 }
 
+function normaliser(texte: string): string {
+  return texte
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+}
+
+// Filtre par nom ou antenne, insensible à la casse et aux accents.
+export function filtrerProfils(profils: Profil[], recherche: string): Profil[] {
+  const terme = normaliser(recherche.trim());
+  if (!terme) return profils;
+  return profils.filter(
+    (profil) => normaliser(profil.nom).includes(terme) || normaliser(profil.antenne).includes(terme),
+  );
+}
+
 export const profilsExemple: Profil[] = [
   { id: "1", nom: "Sophie Lefebvre", antenne: "Talence", estActiv: false, estPairAidante: false },
   { id: "2", nom: "Marie Courtin", antenne: "Lille", estActiv: false, estPairAidante: false },

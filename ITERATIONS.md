@@ -86,15 +86,57 @@ Origine : retour du développeur après l'Itération 1 — l'écran en ligne « 
 
 ---
 
+## Itération 3 : recherche et filtre fonctionnels sur le dashboard
+
+**Plan validé par le développeur le 2026-11-18**, temps restant annoncé ~15-20 minutes (reconfirmé, après ~20 min annoncées au début de l'Itération 2). Consigne d'exécution : paralléliser au maximum — l'Itération 4 (écran 2) est lancée en parallèle pendant le codage de celle-ci, cf. plus bas.
+
+- **Dans le périmètre** : filtrage **côté client** sur les données déjà en dur (aucune nouvelle dépendance, aucun appel API) :
+  - Champ de recherche : filtre les profils par nom ou antenne (insensible à la casse/accents), par section.
+  - Chips de filtre (Toutes / BURN'ette / ACTIV' / Pair-aidante) : n'affichent que la section choisie ; « Toutes » réaffiche les trois.
+- **Hors périmètre** : tout appel serveur, persistance d'un filtre, écran 2 — inchangé.
+- **Critères d'acceptation** :
+  - Étant donné le dashboard ouvert, quand je tape un texte dans la recherche, alors seuls les profils dont le nom ou l'antenne contiennent ce texte restent affichés.
+  - Étant donné un chip de filtre cliqué, quand le dashboard se met à jour, alors seule la section correspondante s'affiche (ou les trois pour « Toutes »).
+  - Étant donné une fonction pure de filtrage testée unitairement (recherche vide, aucun résultat, accents), quand on rejoue les tests Vitest, alors ils passent.
+- **Codage estimé** : 8 minutes.
+- **Fichiers prévus** : `frontend/src/lib/profils.ts` (fonction `filtrerProfils`), `frontend/src/lib/profils.test.ts`, `frontend/src/app/page.tsx` (state recherche + chip actif).
+- **Tests unitaires prévus** : 2-3, Vitest, sur `filtrerProfils`.
+- **Bilan** :
+  - Durée de codage réelle : 2 minutes (budget 8 minutes, pas d'alarme).
+  - Les 3 critères d'acceptation sont satisfaits : recherche par nom/antenne (insensible casse/accents) vérifiée en prod (`curl localhost:8080/` contient le champ) ; chips de filtre fonctionnels (state React, un seul rendu par section active) ; 3 nouveaux tests Vitest sur `filtrerProfils` passent (6/6 au total avec les 3 existants).
+  - Rien n'est reporté côté critères d'acceptation.
+  - Parallélisation : l'Itération 4 (écran 2) tournait en même temps dans un sous-agent isolé (worktree) pendant tout le codage de celle-ci — aucun conflit de fichiers, les deux touchaient des fichiers disjoints par construction.
+  - Rien bloqué par le harnais : tests verts, contrat de déployabilité propre.
+  - **Modifications** :
+    - `frontend/src/lib/profils.ts` (édité) : fonction `filtrerProfils` (normalisation accents/casse, filtre nom + antenne) — sert les critères 1 et 3.
+    - `frontend/src/lib/profils.test.ts` (édité) : 3 tests sur `filtrerProfils` — sert le critère 3.
+    - `frontend/src/app/page.tsx` (édité) : passage en composant client (`"use client"`), state `recherche`/`sectionActive`, chips devenus des boutons cliquables, champ de recherche contrôlé — sert les critères 1 et 2.
+
+---
+
+## Itération 4 : écran 2 (fiche profil), lecture seule, données simulées
+
+**Plan proposé par l'agent le 2026-11-18, en cours d'exécution en parallèle de l'Itération 3** (sous-agent en worktree git isolé, cf. consigne du développeur de paralléliser). ⚠️ **Changement par rapport à la décision du 2026-11-18** qui groupait écran 2 + Postgres + édition du statut en un seul bloc (« Itération 3 (candidate) » ci-dessous, devenue Itération 5) : vu le temps restant, Postgres et l'édition ne tiennent pas en parallèle du reste — seul l'écran, en lecture seule, est tenté maintenant. **À valider par les cadreurs.**
+
+- **Dans le périmètre** : nouvelle route `frontend/src/app/profil/[id]/page.tsx`, reprenant le visuel de `maquettes/dashboard-fiche-profil.html` (écran 2), avec des données d'exemple **locales à cette route** (pas de modification de `frontend/src/lib/profils.ts` ni de `page.tsx` du dashboard, pour éviter tout conflit avec l'Itération 3 en cours sur ces mêmes fichiers).
+- **Hors périmètre** : clic depuis le dashboard vers la fiche (pas de lien câblé, accès direct par URL seulement), édition du statut, toute formation ajoutée/modifiée, persistance — reportés à l'Itération 5.
+- **Critères d'acceptation** :
+  - Étant donné l'URL `/profil/<id>` ouverte, quand la page se charge, alors le visuel reprend fidèlement `maquettes/dashboard-fiche-profil.html` (hero, progression du statut, formations, disponibilités) en lecture seule.
+  - Étant donné les tests Vitest existants (Itération 1-3), quand on les rejoue, alors ils passent toujours (aucune régression, aucun fichier partagé modifié).
+- **Fichiers prévus** : `frontend/src/app/profil/[id]/page.tsx`, `frontend/src/app/profil/[id]/page.module.css`, `frontend/src/lib/profilDetail.ts` (données d'exemple locales, nouveau fichier).
+- **Bilan** : _à remplir une fois le sous-agent revenu et sa branche relue/fusionnée._
+
+---
+
 ## À venir (liste ordonnée, à détailler au fil de l'eau)
 
 > Référence visuelle à jour : `maquettes/dashboard-fiche-profil.html` (commit `52c9ec6`, produit en parallèle de l'Itération 1), qui reprend la vraie palette du site L'BURN (contraste AA) au lieu de celle inventée par `passation/prototype/index.html`. Les tokens de couleur utilisés dans `frontend/src/app/page.module.css` sont déjà alignés dessus (mêmes valeurs `--lb-color-*`, mêmes couleurs par section). À comparer avant de coder l'écran suivant.
 
-1. **Itération 3 (candidate)** : fiche profil (écran 2, reprendre `maquettes/dashboard-fiche-profil.html`) + base de données + édition du statut ACTIV' → Pair-aidante. Regroupés car l'un ne sert à rien sans l'autre (pas d'écran à éditer sans fiche profil, pas d'édition qui tienne sans persistance). Décidé avec le développeur le 2026-11-18 : la base de données arrive à cette itération, pas avant. À détailler précisément (et probablement re-découper si trop gros une fois chiffré) au moment de sa planification — voir les règles de taille de `CLAUDE.md` §3. Points à trancher avant de coder :
+1. **Itération 5 (candidate)** : persistance Postgres de la fiche profil + édition du statut ACTIV' → Pair-aidante (dépend de l'Itération 4). Décidé avec le développeur le 2026-11-18 : la base de données arrive à cette itération, pas avant. À détailler précisément (et probablement re-découper si trop gros une fois chiffré) au moment de sa planification — voir les règles de taille de `CLAUDE.md` §3. Points à trancher avant de coder :
    - Stockage : Postgres (service du compose, volume nommé), pas SQLite — imposé par `docs/contrat-deployabilite.md` règle 6. Décision à consigner dans `adr.md` avant d'écrire du code.
    - Sous-progression interne à chaque statut (candidature « en cours » / « validée » pour ACTIV' ; formation / habilitation / supervision séparées pour Pair-aidante) — proposition graphique à faire avant de coder (décision du 2026-11-18, `adr.md`).
 2. Ajout / modification d'une formation sur la fiche profil.
-3. Recherche et filtre fonctionnels sur le dashboard.
+3. Lien cliquable dashboard → fiche profil (câblage de `page.tsx` vers `/profil/[id]`, une fois l'Itération 4 fusionnée).
 4. Sélecteur « Qui êtes-vous ? » (changement de rôle sans connexion, cf. PRD).
 5. Import Excel avec correspondance manuelle des colonnes (pas de mapping automatique — colonnes réelles inconnues, cf. `docs/analyse-maquette-donnees-asso.md` §6).
 6. Filtrage du dashboard par antenne pour la directrice d'antenne — reporté, non géré aujourd'hui (référentiel d'antenne pas encore tranché, cf. §4 et §7 de l'analyse).

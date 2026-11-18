@@ -1,12 +1,19 @@
+"use client";
+
+import { useState } from "react";
 import styles from "./page.module.css";
 import {
   LIBELLES_PLURIEL,
   LIBELLES_SINGULIER,
+  filtrerProfils,
   profilsExemple,
   regrouperParSection,
   type Profil,
   type Section,
 } from "../lib/profils";
+
+const SECTIONS: Section[] = ["burnette", "activ", "pairaidante"];
+type FiltreSection = Section | "toutes";
 
 function initiales(nom: string): string {
   return nom
@@ -41,7 +48,11 @@ function SectionProfils({ section, profils }: { section: Section; profils: Profi
 }
 
 export default function Dashboard() {
-  const groupes = regrouperParSection(profilsExemple);
+  const [recherche, setRecherche] = useState("");
+  const [sectionActive, setSectionActive] = useState<FiltreSection>("toutes");
+
+  const groupes = regrouperParSection(filtrerProfils(profilsExemple, recherche));
+  const sectionsAffichees = sectionActive === "toutes" ? SECTIONS : [sectionActive];
 
   return (
     <div className={styles.phoneShell}>
@@ -56,20 +67,38 @@ export default function Dashboard() {
         <div className={styles.filterBar}>
           <span className={styles.filterLabel}>Filtre</span>
           <div className={styles.filterChips}>
-            <span className={`${styles.chip} ${styles.activeChip}`}>Toutes</span>
-            <span className={styles.chip}>BURN&apos;ette</span>
-            <span className={styles.chip}>ACTIV&apos;</span>
-            <span className={styles.chip}>Pair-aidante</span>
+            <button
+              type="button"
+              className={`${styles.chip} ${sectionActive === "toutes" ? styles.activeChip : ""}`}
+              onClick={() => setSectionActive("toutes")}
+            >
+              Toutes
+            </button>
+            {SECTIONS.map((section) => (
+              <button
+                key={section}
+                type="button"
+                className={`${styles.chip} ${sectionActive === section ? styles.activeChip : ""}`}
+                onClick={() => setSectionActive(section)}
+              >
+                {LIBELLES_SINGULIER[section]}
+              </button>
+            ))}
           </div>
         </div>
 
         <div className={styles.searchBar}>
-          <input type="text" placeholder="Rechercher un prénom, une antenne…" readOnly />
+          <input
+            type="text"
+            placeholder="Rechercher un prénom, une antenne…"
+            value={recherche}
+            onChange={(evenement) => setRecherche(evenement.target.value)}
+          />
         </div>
 
-        <SectionProfils section="burnette" profils={groupes.burnette} />
-        <SectionProfils section="activ" profils={groupes.activ} />
-        <SectionProfils section="pairaidante" profils={groupes.pairaidante} />
+        {sectionsAffichees.map((section) => (
+          <SectionProfils key={section} section={section} profils={groupes[section]} />
+        ))}
       </div>
     </div>
   );
